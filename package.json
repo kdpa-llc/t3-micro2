@@ -1,7 +1,6 @@
 {
   "name": "t3-micro2",
   "version": "0.1.0",
-  "private": true,
   "description": "A Work Louder Creator Micro 2 for T3 Code: six keys show the state of your threads and open them, the rest run T3 Code actions.",
   "type": "module",
   "license": "MIT",

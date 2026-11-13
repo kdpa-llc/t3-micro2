@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. See [Conven
 
 ## 0.1.0 (2026-11-12)
 
-First version, installed from a checkout before releases were published to npm.
+First version. Published to npm by hand, before the release workflow took over.
 
 ### Features
 

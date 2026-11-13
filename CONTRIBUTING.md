@@ -231,7 +231,7 @@ When adding features or changing functionality:
 
 ## Releases
 
-There is no release yet. Once there is, releases are automatic: after CI passes on `main`, semantic-release picks the next version from the commit messages, publishes it to npm, creates a GitHub release and updates CHANGELOG.md. The version lives in `package.json` only: the build writes it into the app. See [PUBLISHING.md](PUBLISHING.md).
+Releases are automatic. After CI passes on `main`, semantic-release picks the next version from the commit messages, publishes it to npm, creates a GitHub release and updates CHANGELOG.md. The version lives in `package.json` only: the build writes it into the app. See [PUBLISHING.md](PUBLISHING.md).
 
 ## Community
 

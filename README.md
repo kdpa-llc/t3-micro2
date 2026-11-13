@@ -6,6 +6,8 @@
 
 Six keys light up with the state of your T3 Code threads and open them. The other keys, the knob and the joystick jump to the thread that waits on you, stop a run, take dictation, settle a thread and send. It does for T3 Code what the pad's ChatGPT layer does for Codex, on a layer of its own.
 
+[![npm version][npm-version-badge]][npm-package]
+[![npm downloads][npm-downloads-badge]][npm-package]
 [![CI][ci-badge]][ci-workflow]
 [![License: MIT][license-badge]][license-file]
 [![Platform: macOS][platform-badge]](#-what-you-need)
@@ -40,6 +42,7 @@ With several agent threads running, the slow part is noticing which one needs yo
 | 🎛️ **The pad**              | A Work Louder Creator Micro 2 that has a ChatGPT layer, connected by USB. Tested with firmware 0.6.3.           |
 | 💬 **T3 Code**              | The desktop app, opened at least once.                                                                          |
 | 🛠️ **Apple's command line tools** | For the Swift compiler. `xcode-select --install` installs them. Setup builds the app on your Mac.         |
+| 📦 **Node.js 18 or later**  | To install with npm.                                                                                            |
 | 🧩 **A free layer on the pad** | Setup turns an empty layer into the T3 layer. With none empty, you choose which layer to replace.            |
 
 Work Louder's Input app and the ChatGPT app are not needed. If you use them, they keep working.
@@ -54,21 +57,22 @@ Work Louder's Input app and the ChatGPT app are not needed. If you use them, the
 Install T3 Micro Bridge from https://github.com/kdpa-llc/t3-micro2 by following the Quick start section of its README.
 ```
 
-**By hand:** run these commands in a terminal.
+**By hand:** run these two commands in a terminal.
 
 ```bash
-git clone https://github.com/kdpa-llc/t3-micro2.git
-cd t3-micro2
-./t3-micro2 setup
+npm install -g t3-micro2
+t3-micro2 setup
 ```
+
+To try the latest `main` before it's released, clone the repository and run `./t3-micro2 setup` in it.
 
 > **🤖 Agents doing the install:**
 >
 > 1. Check the machine: `sw_vers` shows macOS 13 or later, `command -v swiftc` finds the compiler, and `ls ~/.t3/userdata` shows T3 Code has run. If one is missing, tell the user what to install and stop.
-> 2. Clone the repository to a folder that stays, such as `~/projects/t3-micro2`. The app is built from it, and updates are a `git pull` there. Install only from this repository: no npm package of this name is ours yet.
-> 3. Run `./t3-micro2 setup`. If it stops because the pad has no empty layer, show the user the layers it printed and ask which one to replace. Then run `./t3-micro2 setup --layer N`.
+> 2. Run `npm install -g t3-micro2`. Check that `npm view t3-micro2 repository.url` names `kdpa-llc/t3-micro2` before you run anything from it.
+> 3. Run `t3-micro2 setup`. If it stops because the pad has no empty layer, show the user the layers it printed and ask which one to replace. Then run `t3-micro2 setup --layer N`.
 > 4. Tell the user what setup printed. If it says Accessibility is not allowed, they must turn it on themselves in System Settings. You can't do it for them.
-> 5. Run `./t3-micro2 doctor` and report anything it marks `FIX`. If it notes more T3 servers on the Mac, ask the user whether the keys should show their threads too, and run `./t3-micro2 spaces add --all` on a yes.
+> 5. Run `t3-micro2 doctor` and report anything it marks `FIX`. If it notes more T3 servers on the Mac, ask the user whether the keys should show their threads too, and run `t3-micro2 spaces add --all` on a yes.
 
 `t3-micro2 setup` is safe to run again. It:
 
@@ -166,8 +170,6 @@ These are the colors the ChatGPT app uses for Codex threads.
 
 ## 🧰 CLI reference
 
-Run it as `./t3-micro2` in the checkout.
-
 | Command                                                  | What it does                                                                |
 | -------------------------------------------------------- | --------------------------------------------------------------------------- |
 | `t3-micro2 setup [--layer N] [--no-layer] [--no-shortcut]` | Build the app, add the pad's T3 layer, start the bridge at login          |
@@ -234,11 +236,11 @@ t3-micro2 logs
 
 ## 🔄 Update and remove
 
-**Update:** pull, then run setup again. Your settings, the pad's layer and the Accessibility permission stay.
+**Update:** install the new version, then run setup again. Your settings, the pad's layer and the Accessibility permission stay.
 
 ```bash
-git pull
-./t3-micro2 setup
+npm install -g t3-micro2
+t3-micro2 setup
 ```
 
 **Remove:**
@@ -247,6 +249,7 @@ git pull
 t3-micro2 layer restore      # optional: put the pad's old keymap back first
 t3-micro2 uninstall          # the app and its launch agent; keeps settings and backups
 t3-micro2 uninstall --all    # also settings, tokens, the signing identity, the log and the stop shortcut
+npm rm -g t3-micro2
 ```
 
 `uninstall --all` keeps the keymap backups, and leaves the pad as it is.
@@ -261,7 +264,7 @@ npm run lint     # shellcheck
 npm test         # builds into a temporary folder and runs the self-test
 ```
 
-Commit messages follow [Conventional Commits][conventional-commits], and [semantic-release][semantic-release] makes releases from them. See [PUBLISHING.md][publishing].
+Releases are automatic: [semantic-release][semantic-release] publishes to npm from [Conventional Commits][conventional-commits] after CI passes. See [PUBLISHING.md][publishing].
 
 ## 🔗 Complementary projects
 
@@ -321,6 +324,9 @@ Made with ❤️ by KDPA
 
 <!-- Reference links -->
 
+[npm-version-badge]: https://img.shields.io/npm/v/t3-micro2.svg
+[npm-package]: https://www.npmjs.com/package/t3-micro2
+[npm-downloads-badge]: https://img.shields.io/npm/dm/t3-micro2
 [ci-badge]: https://github.com/kdpa-llc/t3-micro2/actions/workflows/ci.yml/badge.svg
 [ci-workflow]: https://github.com/kdpa-llc/t3-micro2/actions/workflows/ci.yml
 [license-badge]: https://img.shields.io/badge/License-MIT-yellow.svg

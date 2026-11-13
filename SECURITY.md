@@ -50,7 +50,7 @@ When using T3 Micro Bridge:
 
 ### For Users
 
-1. **Keep Updated**: Run `git pull` and `t3-micro2 setup` now and then
+1. **Keep Updated**: Run `npm install -g t3-micro2` and `t3-micro2 setup` now and then
 2. **Look Before You Approve**: APPROVE presses the newest Approve button in the T3 Code window. Read the request first
 3. **Give Accessibility to the Bridge Only**: The permission belongs to T3 Micro Bridge, not to your terminal or your agent
 4. **Clean Logs Before Sharing**: The log holds the titles of your threads
