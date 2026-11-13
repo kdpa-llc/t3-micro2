@@ -63,15 +63,16 @@ jobs:
       id-token: write
 
     steps:
-      # Check the credential before checkout so an expired or missing token is
-      # reported directly instead of surfacing later as an ambiguous git error.
-      - name: Verify RELEASE_TOKEN
+      # The release commit is pushed with RELEASE_TOKEN when the organization shares
+      # it with this repository, which a ruleset that requires pull requests needs.
+      # Without it the workflow's own token is used, which lives only for this run.
+      - name: Check the GitHub credential
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           if [ -z "$RELEASE_TOKEN" ]; then
-            echo "::error title=RELEASE_TOKEN missing::The RELEASE_TOKEN secret is not available to this repository. semantic-release pushes its release commit to protected branches, so the default GITHUB_TOKEN cannot be used. Add the PAT for the ruleset bypass identity and grant it access to this repository."
-            exit 1
+            echo "RELEASE_TOKEN is not shared with this repository: using the workflow's own token."
+            exit 0
           fi
 
           status=$(curl -sS -o /dev/null -w '%{http_code}' \
@@ -93,12 +94,12 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
           persist-credentials: true
 
       # npm trusted publishing (OIDC) needs npm >= 11.5.1 and Node >= 22.14.0;
-      # Node 24 ships a new enough npm. Until trusted publishing is set up on
-      # npmjs.com, semantic-release publishes with NPM_TOKEN.
+      # Node 24 ships a new enough npm. The package trusts this workflow on
+      # npmjs.com, so there is no npm token to store.
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -115,14 +116,13 @@ jobs:
             exit 1
           fi
 
-      # The release token is in .git/config from here on, so no package scripts
-      # run at install. The only code that runs with the tokens is semantic-release
-      # and its plugins.
+      # The GitHub token is in .git/config from here on, so no package scripts
+      # run at install. The only code that runs with it is semantic-release and
+      # its plugins.
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
         run: npx semantic-release
