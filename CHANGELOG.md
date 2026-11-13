@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/kdpa-llc/t3-micro2/compare/v0.1.0...v0.1.1) (2026-11-13)
+
+### Documentation
+
+* add the badges and the picture link that need a public repository ([bdcf44a](https://github.com/kdpa-llc/t3-micro2/commit/bdcf44a4edc6955714c613367639c8b83219029a))
+
 ## 0.1.0 (2026-11-12)
 
 First version. Published to npm by hand, before the release workflow took over.
