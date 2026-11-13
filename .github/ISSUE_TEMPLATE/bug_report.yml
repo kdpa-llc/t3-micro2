@@ -1,0 +1,101 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+        The bridge's log holds the titles of your threads. Please take them out before you paste it here, and never paste a token.
+        The output of `doctor` and `spaces` shows folder names from your home folder. Change them if they say something about you.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Switch the pad to the T3 Code layer...
+        2. Press STOP while a thread runs...
+        3. See...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where is the problem?
+      options:
+        - Setup or update
+        - The pad's T3 layer
+        - Lights
+        - Thread keys
+        - Action keys, knob or joystick
+        - Codex or the Input app next to the bridge
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version are you running? (`t3-micro2 version`)
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: firmware
+    attributes:
+      label: Pad firmware
+      description: The firmware of your Creator Micro 2 (`t3-micro2 layer show` prints it)
+      placeholder: "0.6.3"
+    validations:
+      required: true
+
+  - type: input
+    id: t3
+    attributes:
+      label: T3 Code version
+      placeholder: "0.0.30"
+
+  - type: input
+    id: os
+    attributes:
+      label: macOS version and Mac
+      placeholder: "macOS 27.2, Apple silicon"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste the output of `t3-micro2 doctor` and `t3-micro2 status`, and the end of `t3-micro2 logs` with thread titles taken out.
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
