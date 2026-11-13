@@ -6,6 +6,27 @@ import IOKit.hid
 
 // MARK: - Bridge
 
+/// A switch can send an extra press and release in the few milliseconds after it is let go.
+/// This drops them, so one click of the knob is one click.
+struct Debounce {
+    static let window: TimeInterval = 0.03
+    private var lastRelease: [String: Date] = [:]
+    private var dropping: Set<String> = []
+
+    /// False when the event is such an echo and should be ignored.
+    mutating func accept(_ key: String, press: Bool, at time: Date = Date()) -> Bool {
+        if press {
+            if let last = lastRelease[key], time.timeIntervalSince(last) < Debounce.window {
+                dropping.insert(key)
+                return false
+            }
+            return true
+        }
+        lastRelease[key] = time
+        return dropping.remove(key) == nil
+    }
+}
+
 final class Bridge {
     var config = Config.load()
     let micro = Micro()
@@ -30,6 +51,7 @@ final class Bridge {
     /// Advanced mode adds hold actions and the joystick. Kept across restarts.
     var advanced = false
     private var pressTimers: [String: Timer] = [:]
+    private var debounce = Debounce()
     private var pickerOpenUntil = Date.distantPast
     private var nextCursor = 0
     private var nextQueueKey = ""
@@ -278,6 +300,10 @@ final class Bridge {
     func handleKey(_ key: String, _ act: Int) {
         if key == "ENC_CW" || key == "ENC_CC" {
             if act == 2 { knobTurn(clockwise: key == "ENC_CW") }
+            return
+        }
+        guard debounce.accept(key, press: act == 1) else {
+            debug("ignored an echo of \(key)")
             return
         }
         if key == "ACT10" {

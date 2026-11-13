@@ -106,6 +106,7 @@ The pad has four rows. Row 1 is the knob, thread keys 1 and 2, and the joystick.
 | **Knob**                     | Turn: previous or next thread. Press: model picker, turn to move, press to choose | Hold for a second, in either mode: switch between simple and advanced |
 | **Joystick**                 | Off in simple mode                                                  | Left back, right forward, up effort picker, down sidebar |
 
+- **T3 Code doesn't have to be in front.** A key press brings it forward, then acts.
 - **Simple mode** acts the moment a key goes down. **Advanced mode** waits for the release, to tell a tap from a hold.
 - **Switch modes** by holding the knob for a second. The ring shows white for simple and violet for advanced. The mode is kept across restarts.
 - The small round button, first in row 4, is the pad's own. It switches layers.
@@ -200,7 +201,7 @@ Settings are in `~/Library/Application Support/T3MicroBridge/config.json`. Run `
 
 ## 🛡️ Security and privacy
 
-- **Accessibility** lets an app press keys and buttons in any other app. The bridge uses it for T3 Code: it brings T3 Code to the front and sends a key press only once T3 Code is the app in front. If T3 Code doesn't come forward within a second and a half, nothing is sent. The app can't be made to press a key from the command line, and macOS refuses to load other code into it.
+- **Accessibility** lets an app press keys and buttons in any other app. The bridge uses it for T3 Code: a key press brings T3 Code to the front, and the bridge sends it only once T3 Code is the app in front. If T3 Code doesn't come forward within two seconds, or the screen is locked, nothing is sent. The app can't be made to press a key from the command line, and macOS refuses to load other code into it.
 - **APPROVE presses the newest Approve button** in the T3 Code window. Look at the request before you press it. Decline is on a hold, in advanced mode, so a slip doesn't refuse a request.
 - **The tokens are read-only.** The bridge asks each T3 server for a token with the scope `orchestration:read`, and sends it only to a running server on this Mac. Tokens last 90 days, are stored in files only you can read, and are renewed by the bridge. `t3-micro2 uninstall --all` revokes them.
 - **Nothing leaves your Mac.** The bridge talks to the pad and to the T3 servers on this Mac. It has no network listener and sends no usage data. The key map page is the one exception: when you open it, your browser loads three.js and its fonts from public CDNs.
@@ -225,6 +226,7 @@ t3-micro2 logs
 - **Setup says every layer has keys on it:** run `t3-micro2 layer show`, pick a layer you can give up, and run `t3-micro2 setup --layer N`. Its old keys are in the backup.
 - **The T3 layer disappeared after you used the Input app:** the Input app wrote its own copy of the keymap. Run `t3-micro2 layer install`.
 - **The lights show Codex's colors on the T3 layer:** the bridge isn't running. Run `t3-micro2 start`.
+- **A key does nothing, and the log says T3 Code did not come to the front:** the screen was locked, or a system dialog was in the way. The bridge sends nothing then, so a key press can't land in a password field.
 - **STOP does nothing:** T3 Code has no stop shortcut, or yours is on a key the bridge can't press. `t3-micro2 doctor` says which.
 - **A shortcut key does the wrong thing:** the bridge presses keys by their position on a US keyboard. Other layouts can differ for `[` and `]`.
 - **The Input app can't see the pad:** bring the Input app to the front. The bridge lets go of the pad while it is in front.

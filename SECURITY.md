@@ -68,7 +68,7 @@ When using T3 Micro Bridge:
 ### The Accessibility Permission
 
 - macOS's Accessibility permission lets an app send key presses to, and press buttons in, any other app. The bridge needs it for every action except opening a thread and starting a new one
-- Key presses go to whichever app is in front. The bridge brings T3 Code to the front, checks that it is the front app, waits a moment, checks again, and only then sends the key press. If T3 Code is not in front within a second and a half, nothing is sent. A window that takes the front in the instant after the last check would still receive it
+- Key presses go to whichever app is in front. The bridge brings T3 Code to the front, checks that it is the front app, waits a moment, checks again, and only then sends the key press. If T3 Code is not in front within two seconds, nothing is sent. Nothing is sent while the screen is locked either. A window that takes the front in the instant after the last check would still receive it
 - The app takes no command that makes it press a key, so another program can't borrow its permission that way. It is signed with the hardened runtime, so macOS refuses to load other code into it
 - APPROVE and its hold action, Decline, look through the T3 Code window for a button with that name, from the bottom up, and press the first one found
 - SEND presses Return in T3 Code. It sends whatever is in the composer

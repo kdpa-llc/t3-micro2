@@ -38,24 +38,52 @@ final class Actions {
         NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bundleId
     }
 
-    /// Brings T3 Code to the front, then runs the block. Key presses go to whichever app is in
-    /// front, so the block runs only once that app is T3 Code, and not at all if it never is.
-    private func withT3Frontmost(_ block: @escaping () -> Void) {
-        guard let app = t3App else { log("T3 Code is not running"); return }
-        if t3IsInFront { block(); return }
-        app.activate(options: [.activateAllWindows])
-        waitForT3(until: Date().addingTimeInterval(1.5), block)
+    private var screenIsLocked: Bool {
+        let session = CGSessionCopyCurrentDictionary() as? [String: Any]
+        return (session?["CGSSessionScreenIsLocked"] as? NSNumber)?.boolValue ?? false
     }
 
-    private func waitForT3(until deadline: Date, _ block: @escaping () -> Void) {
+    /// Brings T3 Code to the front, then runs the block. A key press goes to whichever app is in
+    /// front, so the block runs only once that app is T3 Code, and not at all if it never is.
+    private func withT3Frontmost(_ block: @escaping () -> Void) {
+        guard let app = t3App else { log("T3 Code is not running, so the key press was not sent"); return }
+        if t3IsInFront { block(); return }
+        // Behind the lock screen a key press would land in the password field.
+        guard !screenIsLocked else { log("the screen is locked, so the key press was not sent"); return }
+        bringForward(app)
+        waitForT3(app, since: Date(), reopened: false, block)
+    }
+
+    /// Asks for the front twice over: macOS can ignore the plain request from a background app,
+    /// and the accessibility one still works then.
+    private func bringForward(_ app: NSRunningApplication) {
+        app.activate(options: [.activateAllWindows])
+        let element = AXUIElementCreateApplication(app.processIdentifier)
+        AXUIElementSetMessagingTimeout(element, 0.5)
+        AXUIElementSetAttributeValue(element, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
+    }
+
+    /// Opening the app again is what a click on its Dock icon does. It also brings back a hidden window.
+    private func reopen(_ app: NSRunningApplication) {
+        guard let url = app.bundleURL else { return }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.openApplication(at: url, configuration: configuration, completionHandler: nil)
+    }
+
+    private func waitForT3(_ app: NSRunningApplication, since start: Date, reopened: Bool, _ block: @escaping () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [self] in
+            let waited = Date().timeIntervalSince(start)
             if t3IsInFront {
                 // Give its window a moment to take the keyboard, then look once more.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [self] in
                     if t3IsInFront { block() } else { log("T3 Code lost the front before the key press, so nothing was sent") }
                 }
-            } else if Date() < deadline {
-                waitForT3(until: deadline, block)
+            } else if waited > 0.5, !reopened {
+                reopen(app)
+                waitForT3(app, since: start, reopened: true, block)
+            } else if waited < 2.0 {
+                waitForT3(app, since: start, reopened: reopened, block)
             } else {
                 log("T3 Code did not come to the front, so the key press was not sent")
             }

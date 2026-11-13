@@ -27,6 +27,7 @@ enum SelfTest {
         json()
         keymap()
         shortcuts()
+        echoes()
         threads()
         check("version looks like 1.2.3", bridgeVersion.split(separator: ".").count == 3)
         print(failures == 0 ? "self-test: \(checks) checks passed" : "self-test: \(failures) of \(checks) checks failed")
@@ -136,6 +137,23 @@ enum SelfTest {
         let own = Data(#"[{"key":"mod+.","command":"thread.stop"}]"#.utf8)
         check("an existing stop shortcut is kept", (try? Shortcuts.addingStop(to: own)) == .present("mod+."))
         check("a changed stop shortcut is not removed", (try? Shortcuts.removingStop(from: own)) == .some(nil))
+    }
+
+    // MARK: Key echoes
+
+    /// The times are the ones a real knob click produced: two echoes within 5 ms of the release.
+    private static func echoes() {
+        func at(_ ms: Double) -> Date { Date(timeIntervalSince1970: 1_000_000 + ms / 1000) }
+        var debounce = Debounce()
+        let events: [(press: Bool, ms: Double, real: Bool)] = [
+            (true, 0, true), (false, 178, true), (true, 180, false), (false, 181, false),
+            (true, 182, false), (false, 183, false), (true, 900, true), (false, 1050, true),
+        ]
+        let kept = events.map { debounce.accept("ENC_CLK", press: $0.press, at: at($0.ms)) }
+        check("echoes after a release are dropped, real presses are kept", kept == events.map { $0.real })
+        var other = Debounce()
+        _ = other.accept("AG00", press: true, at: at(0)); _ = other.accept("AG00", press: false, at: at(100))
+        check("one key's release does not swallow another key's press", other.accept("AG01", press: true, at: at(101)))
     }
 
     // MARK: Thread state and order
