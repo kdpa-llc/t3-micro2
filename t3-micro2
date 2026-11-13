@@ -1,0 +1,580 @@
+#!/bin/bash
+# t3-micro2: installs and runs T3 Micro Bridge, which connects a Work Louder
+# Creator Micro 2 to T3 Code. `setup` builds the app from this folder, gives
+# the pad a T3 layer, and starts the bridge at login. It is safe to run again.
+set -euo pipefail
+
+# The folder this script is in, through any links to it.
+SELF=$0
+while [ -L "$SELF" ]; do
+  LINK=$(readlink "$SELF")
+  case $LINK in /*) SELF=$LINK ;; *) SELF=$(dirname "$SELF")/$LINK ;; esac
+done
+HERE=$(cd "$(dirname "$SELF")" && pwd)
+
+APP=${T3_MICRO_APP:-$HOME/Applications/T3 Micro Bridge.app}   # T3_MICRO_APP only for tests
+BIN="$APP/Contents/MacOS/t3-micro-bridge"
+SUPPORT="$HOME/Library/Application Support/T3MicroBridge"   # settings, tokens, backups, signing identity
+LOGS="$HOME/Library/Logs/T3MicroBridge"
+LOG="$LOGS/bridge.log"
+AGENTS="$HOME/Library/LaunchAgents"
+DOMAIN="gui/$(id -u)"
+DEFAULT_ID=us.kdpa.t3-micro-bridge
+SIGN_NAME="T3 Micro Bridge Local Signing"
+KEYCHAIN="$SUPPORT/signing.keychain-db"
+KEYCHAIN_PASS="$SUPPORT/signing-keychain-pass"
+INPUT_ID=it.focusense.input-app   # Work Louder's Input app
+T3_ID=com.t3tools.t3code
+
+say() { printf '%s\n' "$*"; }
+die() { printf 't3-micro2: %s\n' "$*" >&2; exit 1; }
+version() { sed -n 's/^ *"version": *"\(.*\)".*/\1/p' "$HERE/package.json"; }   # the one place the version is kept
+xml() { printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+installed() { [ -x "$BIN" ]; }
+need_app() { installed || die "the bridge isn't installed (run 't3-micro2 setup')"; }
+app_pid() { "$BIN" --app-pid "$1" 2>/dev/null || true; }   # empty when that app isn't open
+
+# The app keeps the identifier it was first installed with, also across an
+# uninstall. macOS ties the Accessibility permission to it, so a new one would
+# mean asking again. T3_MICRO_BUNDLE_ID is only for tests.
+bundle_id() {
+  local id=${T3_MICRO_BUNDLE_ID:-}
+  if [ -z "$id" ] && [ -f "$APP/Contents/Info.plist" ]; then
+    id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist" 2>/dev/null || true)
+  fi
+  if [ -z "$id" ] && [ -f "$SUPPORT/bundle-id" ]; then id=$(sed -n 1p "$SUPPORT/bundle-id"); fi
+  echo "${id:-$DEFAULT_ID}"
+}
+
+# Launch agents that run this app: ours, and any older install under another label.
+agent_plists() { grep -lF "$BIN" "$AGENTS"/*.plist 2>/dev/null || true; }
+agent_label() { /usr/libexec/PlistBuddy -c 'Print :Label' "$1" 2>/dev/null || true; }
+agent_loaded() { launchctl print "$DOMAIN/$1" >/dev/null 2>&1; }
+agent_pid() { launchctl print "$DOMAIN/$1" 2>/dev/null | awk '$1 == "pid" && $2 == "=" && !seen { print $3; seen = 1 }'; }
+
+running_label() {
+  local plist label
+  while IFS= read -r plist; do
+    [ -n "$plist" ] || continue
+    label=$(agent_label "$plist")
+    if [ -n "$label" ] && [ -n "$(agent_pid "$label")" ]; then echo "$label"; return 0; fi
+  done <<LIST
+$(agent_plists)
+LIST
+  return 1
+}
+
+# Stops the bridge and waits until it has let go of the pad.
+stop_bridge() {
+  local plist label i
+  while IFS= read -r plist; do
+    [ -n "$plist" ] || continue
+    label=$(agent_label "$plist")
+    [ -n "$label" ] || continue
+    launchctl bootout "$DOMAIN/$label" 2>/dev/null || true
+    i=0
+    while agent_loaded "$label" && [ "$i" -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+  done <<LIST
+$(agent_plists)
+LIST
+}
+
+write_agent() {
+  local label=$1
+  mkdir -p "$AGENTS" "$LOGS"
+  cat > "$AGENTS/$label.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>$(xml "$label")</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$(xml "$BIN")</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>/dev/null</string>
+  <key>StandardErrorPath</key><string>$(xml "$LOGS/launchd.err.log")</string>
+</dict>
+</plist>
+PLIST
+  plutil -lint "$AGENTS/$label.plist" >/dev/null || die "could not write the launch agent"
+}
+
+# Starts the bridge now and at every login.
+start_bridge() {
+  local label plist i
+  label=$(bundle_id)
+  # One agent only: drop any that an older install left under another label.
+  while IFS= read -r plist; do
+    [ -n "$plist" ] || continue
+    [ "$plist" = "$AGENTS/$label.plist" ] || rm -f "$plist"
+  done <<LIST
+$(agent_plists)
+LIST
+  write_agent "$label"
+  if agent_loaded "$label"; then
+    launchctl kickstart -k "$DOMAIN/$label" >/dev/null
+  else
+    launchctl bootstrap "$DOMAIN" "$AGENTS/$label.plist" || die "macOS did not start the launch agent $label"
+  fi
+  i=0
+  while [ -z "$(agent_pid "$label")" ] && [ "$i" -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+  [ -n "$(agent_pid "$label")" ]
+}
+
+# A self-signed identity in a keychain of its own. macOS ties the Accessibility
+# permission to the app's signature, and an ad hoc signature changes with every
+# build, so without this each update would need the permission again.
+have_identity() {
+  local found
+  [ -f "$KEYCHAIN" ] && [ -f "$KEYCHAIN_PASS" ] || return 1
+  found=$(security find-identity -p codesigning "$KEYCHAIN" 2>/dev/null || true)
+  case $found in *"\"$SIGN_NAME\""*) return 0 ;; *) return 1 ;; esac
+}
+
+# Each step must work: `set -e` does nothing inside a condition, so they are chained.
+make_identity() {
+  local work=$1 pass
+  umask 077
+  mkdir -p "$SUPPORT" &&
+    /usr/bin/openssl rand -hex 24 > "$KEYCHAIN_PASS" &&
+    pass=$(cat "$KEYCHAIN_PASS") && [ -n "$pass" ] &&
+    /usr/bin/openssl req -x509 -newkey rsa:2048 -nodes -keyout "$work/key.pem" -out "$work/cert.pem" -days 3650 \
+      -subj "/CN=$SIGN_NAME" -addext "keyUsage=critical,digitalSignature" \
+      -addext "extendedKeyUsage=critical,codeSigning" -addext "basicConstraints=critical,CA:false" &&
+    /usr/bin/openssl pkcs12 -export -inkey "$work/key.pem" -in "$work/cert.pem" -out "$work/id.p12" \
+      -passout pass:t3-micro2 -name "$SIGN_NAME" &&
+    security create-keychain -p "$pass" "$KEYCHAIN" &&
+    security set-keychain-settings "$KEYCHAIN" &&
+    security unlock-keychain -p "$pass" "$KEYCHAIN" &&
+    security import "$work/id.p12" -k "$KEYCHAIN" -P t3-micro2 -T /usr/bin/codesign &&
+    security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$pass" "$KEYCHAIN"
+}
+
+ensure_identity() {
+  local work made=1
+  if have_identity; then return 0; fi
+  # A keychain without its identity is left from a setup that stopped half way.
+  security delete-keychain "$KEYCHAIN" >/dev/null 2>&1 || true
+  rm -f "$KEYCHAIN" "$KEYCHAIN_PASS"
+  work=$(mktemp -d "${TMPDIR:-/tmp}/t3-micro2.XXXXXX")
+  if (make_identity "$work") >/dev/null 2>&1; then made=0; fi
+  rm -rf "$work"
+  if [ "$made" = 0 ] && have_identity; then return 0; fi
+  security delete-keychain "$KEYCHAIN" >/dev/null 2>&1 || true
+  rm -f "$KEYCHAIN" "$KEYCHAIN_PASS"
+  return 1
+}
+
+signed_locally() {
+  local info
+  info=$(codesign -dv --verbose=2 "$APP" 2>&1 || true)
+  case $info in *"Authority=$SIGN_NAME"*) return 0 ;; *) return 1 ;; esac
+}
+
+sign_app() {
+  if [ "${T3_MICRO_SIGN:-local}" != adhoc ] && ensure_identity &&
+    security unlock-keychain -p "$(cat "$KEYCHAIN_PASS")" "$KEYCHAIN" 2>/dev/null &&
+    codesign --force --options runtime --sign "$SIGN_NAME" --keychain "$KEYCHAIN" "$APP" 2>/dev/null; then
+    return 0
+  fi
+  codesign --force --options runtime --sign - "$APP" 2>/dev/null || die "could not sign the app"
+  if [ "${T3_MICRO_SIGN:-local}" != adhoc ]; then
+    say "build: the local signing identity could not be made, so macOS will ask for the Accessibility permission again after each update"
+  fi
+}
+
+build_app() {
+  local id work v
+  command -v swiftc >/dev/null || die "the Swift compiler is missing. Install Apple's command line tools: xcode-select --install"
+  id=$(bundle_id)
+  v=$(version)
+  work=$(mktemp -d "${TMPDIR:-/tmp}/t3-micro2.XXXXXX")
+  printf 'let bridgeVersion = "%s"\n' "$v" > "$work/Version.swift"
+  if ! swiftc -swift-version 5 -O -o "$work/t3-micro-bridge" "$HERE"/Sources/*.swift "$work/Version.swift" -framework AppKit -framework IOKit; then
+    rm -rf "$work"
+    die "the build failed"
+  fi
+  mkdir -p "$APP/Contents/MacOS"
+  # Move, don't copy over: a running copy of the old file must stay whole.
+  mv -f "$work/t3-micro-bridge" "$BIN"
+  rm -rf "$work"
+  cat > "$APP/Contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>$(xml "$id")</string>
+  <key>CFBundleName</key><string>T3 Micro Bridge</string>
+  <key>CFBundleDisplayName</key><string>T3 Micro Bridge</string>
+  <key>CFBundleExecutable</key><string>t3-micro-bridge</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>$v</string>
+  <key>CFBundleVersion</key><string>$v</string>
+  <key>LSMinimumSystemVersion</key><string>13.0</string>
+  <key>LSUIElement</key><true/>
+</dict>
+</plist>
+PLIST
+  sign_app
+  if [ -z "${T3_MICRO_BUNDLE_ID:-}" ]; then mkdir -p "$SUPPORT"; echo "$id" > "$SUPPORT/bundle-id"; fi
+}
+
+# The Input app keeps its own copy of the keymap and would write it back over
+# the new layer. Restarted, it reads the pad's file again.
+restart_input() {
+  local pid i
+  pid=$(app_pid "$INPUT_ID")
+  [ -n "$pid" ] || return 0
+  kill "$pid" 2>/dev/null || return 0
+  i=0
+  while kill -0 "$pid" 2>/dev/null && [ "$i" -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+  open -g -b "$INPUT_ID" 2>/dev/null || true
+  say "layer: restarted the Input app, so it reads the new keymap from the pad"
+}
+
+# Runs a pad command of the app and restarts the Input app if the keymap changed.
+# Exit codes: 0 done, 3 no pad, 4 no free layer, 5 the pad did not confirm, 6 pad in use.
+pad() {
+  local out code=0
+  out=$("$BIN" "$@" 2>&1) || code=$?
+  # "changed: yes" is a note for this script, not for the reader.
+  [ -z "$out" ] || printf '%s\n' "$out" | sed '/^changed: yes$/d'
+  case $out in *"changed: yes"*) restart_input ;; esac
+  return "$code"
+}
+
+# Pad commands need the pad to themselves, so the bridge steps aside for them.
+with_bridge_paused() {
+  local was="" code=0
+  was=$(running_label || true)
+  [ -z "$was" ] || stop_bridge
+  "$@" || code=$?
+  if [ -n "$was" ]; then start_bridge || say "t3-micro2: the bridge did not start again (see 't3-micro2 doctor')"; fi
+  return "$code"
+}
+
+status_get() { plutil -extract "$1" raw -o - "$SUPPORT/status.json" 2>/dev/null || true; }
+
+cmd_setup() {
+  local layer="" want_layer=1 want_shortcut=1 code=0 todo=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --layer) [ $# -ge 2 ] || die "--layer needs a number"; layer=$2; shift ;;
+      --no-layer) want_layer=0 ;;
+      --no-shortcut) want_shortcut=0 ;;
+      *) die "setup: unknown option $1" ;;
+    esac
+    shift
+  done
+  case $layer in *[!0-9]*) die "--layer needs a number, such as 3" ;; esac
+
+  stop_bridge
+  build_app
+  say "setup: built T3 Micro Bridge $(version) in $APP"
+
+  if [ "$want_layer" = 1 ]; then
+    if [ -n "$layer" ]; then pad --layer-install --replace "$layer" || code=$?; else pad --layer-install || code=$?; fi
+    case $code in
+      0) ;;
+      3) todo="Plug in the pad, then run 't3-micro2 setup' again to add its T3 layer." ;;
+      4) todo="Free a layer in the Input app, or run 't3-micro2 setup --layer N' to replace layer N." ;;
+      *) todo="The pad's T3 layer was not added. Run 't3-micro2 doctor'." ;;
+    esac
+  fi
+
+  if [ "$want_shortcut" = 1 ]; then "$BIN" --shortcut-install || true; fi
+
+  start_bridge || die "the bridge did not start. See $LOGS/launchd.err.log"
+  say "setup: the bridge is running, and starts at login"
+  sleep 6
+  if [ "$(status_get accessibility)" = true ]; then
+    say "setup: Accessibility is allowed, so every key works"
+  else
+    say "setup: one step is left for you. Open System Settings > Privacy & Security > Accessibility and turn on T3 Micro Bridge."
+    say "       Without it the six thread keys and NEW work; the other keys need it."
+  fi
+  if [ -n "$todo" ]; then say "setup: $todo"; return 1; fi
+  say "setup: done. Switch the pad to its T3 Code layer to use it."
+}
+
+cmd_build() {
+  local was=""
+  was=$(running_label || true)
+  build_app
+  say "build: T3 Micro Bridge $(version) in $APP"
+  if [ -n "$was" ]; then start_bridge && say "build: restarted the bridge"; fi
+}
+
+cmd_start() { need_app; start_bridge || die "the bridge did not start. See $LOGS/launchd.err.log"; say "the bridge is running"; }
+cmd_stop() { stop_bridge; say "the bridge is stopped until the next login or 't3-micro2 start'"; }
+
+cmd_status() {
+  local label pid layer t3layer line
+  say "T3 Micro Bridge $(version)"
+  if ! installed; then say "  bridge         not installed (run 't3-micro2 setup')"; return 0; fi
+  label=$(running_label || true)
+  if [ -z "$label" ]; then
+    say "  bridge         not running (run 't3-micro2 start')"
+    return 0
+  fi
+  pid=$(agent_pid "$label")
+  say "  bridge         running, version $(status_get version) (pid $pid)"
+  layer=$(status_get layer)
+  t3layer=$(status_get t3Layer)
+  if [ "$(status_get pad)" != connected ]; then
+    line="not connected"
+  elif [ "$(status_get holding)" = true ]; then
+    line="on layer $layer, the T3 layer: the bridge has the keys and lights"
+  else
+    line="on layer ${layer:-?}. The T3 layer is $t3layer"
+  fi
+  say "  pad            $line"
+  if [ "$(status_get t3Answers)" = true ]; then
+    say "  T3 Code        $(status_get threads) open threads from $(status_get sources), $(status_get wantYou) want you"
+  elif [ "$(status_get holding)" = true ]; then
+    say "  T3 Code        not answering"
+  else
+    say "  T3 Code        read while the pad is on the T3 layer"
+  fi
+  case $(status_get accessibility) in
+    true) line="allowed" ;;
+    false) line="not allowed: turn on T3 Micro Bridge in System Settings > Privacy & Security > Accessibility" ;;
+    *) line="not checked yet" ;;
+  esac
+  say "  accessibility  $line"
+  say "  mode           $(status_get mode), $(status_get order) order"
+  say "  log            ~${LOG#"$HOME"}"
+}
+
+CHECKS_FAILED=0
+ok() { say "  ok    $*"; }
+bad() { say "  FIX   $*"; CHECKS_FAILED=$((CHECKS_FAILED + 1)); }
+note() { say "  note  $*"; }
+
+cmd_doctor() {
+  local label t3app out code
+  say "T3 Micro Bridge $(version)"
+  if [ "$(sw_vers -productVersion | cut -d. -f1)" -ge 13 ]; then ok "macOS $(sw_vers -productVersion)"; else bad "macOS 13 or later is needed"; fi
+  if command -v swiftc >/dev/null; then ok "Swift compiler found"; else bad "no Swift compiler: run 'xcode-select --install'"; fi
+
+  if installed; then
+    ok "app installed, version $("$BIN" --version 2>/dev/null || echo '?'), identifier $(bundle_id)"
+    if signed_locally; then
+      ok "signed with the local identity, so updates keep the Accessibility permission"
+    else
+      note "signed ad hoc: macOS asks for the Accessibility permission again after each update. 't3-micro2 setup' makes the identity"
+    fi
+  else
+    bad "the app is not installed: run 't3-micro2 setup'"
+    return 1
+  fi
+
+  label=$(running_label || true)
+  if [ -n "$label" ]; then ok "bridge running as $label (pid $(agent_pid "$label"))"; else bad "bridge not running: run 't3-micro2 start'"; fi
+
+  t3app=$(mdfind "kMDItemCFBundleIdentifier == '$T3_ID'" 2>/dev/null | sed -n 1p)
+  [ -n "$t3app" ] || t3app=$(find /Applications "$HOME/Applications" -maxdepth 1 -name 'T3 Code*.app' 2>/dev/null | sed -n 1p)
+  if [ -n "$t3app" ]; then ok "T3 Code found: $t3app"; else bad "T3 Code is not installed"; fi
+  if [ -n "$(app_pid "$T3_ID")" ]; then ok "T3 Code is open"; else note "T3 Code is not open. The keys act on its window"; fi
+
+  code=0
+  out=$("$BIN" --threads 2>&1) || code=$?
+  if [ "$code" = 0 ]; then
+    ok "T3 Code answers: $(printf '%s\n' "$out" | sed -n 's/^order: [a-z]*, sources: //p')"
+  else
+    bad "could not read threads from T3 Code. Open T3 Code, then look at $LOG"
+  fi
+
+  if [ "$(status_get holding)" = true ] && [ -n "$label" ]; then
+    ok "pad on layer $(status_get layer), the T3 layer"
+  elif [ -n "$label" ] && [ "$(status_get pad)" = connected ]; then
+    ok "pad connected, on layer $(status_get layer). The T3 layer is $(status_get t3Layer)"
+  else
+    code=0
+    out=$("$BIN" --device 2>&1) || code=$?
+    case $code in
+      0)
+        case $out in
+          *"t3 layer: none"*) bad "the pad has no T3 layer: run 't3-micro2 setup'" ;;
+          *) ok "pad connected, $(printf '%s\n' "$out" | sed -n 's/^t3 layer: /T3 layer /p')" ;;
+        esac ;;
+      3) bad "pad not found: plug it in with its cable" ;;
+      *) bad "the pad does not answer: $(printf '%s\n' "$out" | tail -n 1)" ;;
+    esac
+  fi
+
+  case $(status_get accessibility) in
+    true) ok "Accessibility allowed" ;;
+    false) bad "Accessibility not allowed: turn on T3 Micro Bridge in System Settings > Privacy & Security > Accessibility" ;;
+    *) note "Accessibility not checked yet: the bridge is not running" ;;
+  esac
+
+  out=$("$BIN" --shortcuts 2>/dev/null | sed -n 's/^thread.stop: //p')
+  case $out in
+    *"not set"*) bad "T3 Code has no shortcut for stopping a run, so STOP does nothing: run 't3-micro2 setup'" ;;
+    *) ok "STOP uses T3 Code's shortcut $out" ;;
+  esac
+
+  out=$("$BIN" --spaces 2>/dev/null | sed -n 's/^found  \([^ ]*\) .*/\1/p' | tr '\n' ' ')
+  if [ -n "$out" ]; then note "more T3 servers on this Mac are not read: ${out% }. 't3-micro2 spaces add --all' adds them"; fi
+  if [ -n "$(app_pid "$INPUT_ID")" ]; then note "the Input app is open. While it is in front, the bridge lets go of the pad"; fi
+  if [ "$CHECKS_FAILED" -gt 0 ]; then say "$CHECKS_FAILED to fix"; return 1; fi
+  say "all good"
+}
+
+cmd_threads() { need_app; "$BIN" --threads; }
+
+cmd_logs() {
+  [ -f "$LOG" ] || die "no log yet at $LOG"
+  case ${1:-} in
+    -f|--follow) tail -n 20 -f "$LOG" ;;
+    "") tail -n 40 "$LOG" ;;
+    *[!0-9]*) die "logs takes a number of lines, or -f" ;;
+    *) tail -n "$1" "$LOG" ;;
+  esac
+}
+
+cmd_layer() {
+  need_app
+  case ${1:-show} in
+    show) with_bridge_paused pad --device ;;
+    install)
+      case ${2:-} in
+        "") with_bridge_paused pad --layer-install ;;
+        *[!0-9]*) die "layer install takes a layer number, such as 3" ;;
+        *) with_bridge_paused pad --layer-install --replace "$2" ;;
+      esac ;;
+    restore)
+      if [ -n "${2:-}" ]; then with_bridge_paused pad --layer-restore "$2"; else with_bridge_paused pad --layer-restore; fi ;;
+    *) die "layer: use show, install [N] or restore [file]" ;;
+  esac
+}
+
+# T3 servers on this Mac. The bridge reads the desktop app's unless told about more.
+cmd_spaces() {
+  need_app
+  local out code=0
+  case ${1:-list} in
+    list) "$BIN" --spaces; return ;;
+    add)
+      case ${2:-} in
+        "") die "spaces add takes a T3 data folder, such as ~/.t3-work, or --all" ;;
+        --all) out=$("$BIN" --spaces-add all 2>&1) || code=$? ;;
+        *) out=$("$BIN" --spaces-add "$2" 2>&1) || code=$? ;;
+      esac ;;
+    remove)
+      [ -n "${2:-}" ] || die "spaces remove takes a T3 data folder"
+      out=$("$BIN" --spaces-remove "$2" 2>&1) || code=$? ;;
+    *) die "spaces: use list, add <folder>, add --all or remove <folder>" ;;
+  esac
+  printf '%s\n' "$out" | sed '/^changed: yes$/d'
+  case $out in
+    *"changed: yes"*) if [ -n "$(running_label || true)" ]; then start_bridge && say "spaces: restarted the bridge"; fi ;;
+  esac
+  return "$code"
+}
+
+cmd_keymap() {
+  [ -f "$HERE/docs/keymap.html" ] || die "the key map page is missing from $HERE/docs"
+  open "$HERE/docs/keymap.html"
+}
+
+cmd_uninstall() {
+  local all=0 id plist
+  case ${1:-} in
+    "") ;;
+    --all) all=1 ;;
+    *) die "uninstall: unknown option $1" ;;
+  esac
+  id=$(bundle_id)
+  case $APP in
+    *.app) ;;
+    *) die "$APP is not an app, so nothing was removed" ;;
+  esac
+  if [ -e "$APP" ] && [ ! -f "$APP/Contents/MacOS/t3-micro-bridge" ]; then
+    die "$APP is not T3 Micro Bridge, so nothing was removed"
+  fi
+  stop_bridge
+  if [ "$all" = 1 ]; then
+    if installed; then
+      "$BIN" --shortcut-remove || true
+      "$BIN" --tokens-revoke || true
+    else
+      say "uninstall: the app is already gone, so its T3 Code sessions were not ended and the stop shortcut stays."
+      say "           The sessions end by themselves after 90 days. To end them now, run setup, then uninstall --all."
+    fi
+  fi
+  while IFS= read -r plist; do
+    [ -n "$plist" ] || continue
+    rm -f "$plist"
+  done <<LIST
+$(agent_plists)
+LIST
+  rm -rf "$APP"
+  say "uninstall: removed the app and its launch agent"
+  if [ "$all" = 1 ]; then
+    tccutil reset Accessibility "$id" >/dev/null 2>&1 || true
+    security delete-keychain "$KEYCHAIN" >/dev/null 2>&1 || true
+    find "$SUPPORT" -mindepth 1 -maxdepth 1 ! -name backups -exec rm -rf {} + 2>/dev/null || true
+    rm -rf "$LOGS"
+    say "uninstall: removed settings, tokens, the signing identity, the log and the Accessibility entry"
+    if [ -d "$SUPPORT/backups" ]; then say "uninstall: kept the backups in $SUPPORT/backups"; fi
+    say "uninstall: the pad keeps its T3 Code layer. The Input app can clear it"
+  else
+    say "uninstall: kept settings, backups and the signing identity in $SUPPORT ('uninstall --all' removes them)"
+  fi
+}
+
+usage() {
+  cat <<TEXT
+t3-micro2 $(version): a Work Louder Creator Micro 2 for T3 Code
+
+  t3-micro2 setup [--layer N] [--no-layer] [--no-shortcut]
+                              Build the app, add the pad's T3 layer, start the bridge at login
+  t3-micro2 status            What the bridge sees: pad, layer, T3 Code, permission
+  t3-micro2 doctor            Check the setup and say how to fix what's wrong
+  t3-micro2 threads           The six threads the keys show now
+  t3-micro2 keymap            Open the 3D key map in your browser
+  t3-micro2 spaces            T3 servers on this Mac, and which ones the keys show
+  t3-micro2 spaces add <folder>|--all
+  t3-micro2 spaces remove <folder>
+  t3-micro2 logs [N|-f]       The bridge's log
+  t3-micro2 start | stop | restart
+  t3-micro2 layer show        The pad's layers
+  t3-micro2 layer install [N] Turn an empty layer, or layer N, into the T3 layer
+  t3-micro2 layer restore [file]
+                              Put a saved keymap back on the pad (default: the newest backup)
+  t3-micro2 build             Rebuild the app from this folder
+  t3-micro2 uninstall [--all] Remove the app; --all also removes settings, tokens and the signing identity
+  t3-micro2 version
+TEXT
+}
+
+case ${1:-help} in
+  help|--help|-h|version|--version|-v) ;;
+  *) [ "$(uname -s)" = Darwin ] || die "T3 Micro Bridge runs on macOS only" ;;
+esac
+
+case ${1:-help} in
+  setup) shift; cmd_setup "$@" ;;
+  build) cmd_build ;;
+  start) cmd_start ;;
+  stop) cmd_stop ;;
+  restart) need_app; stop_bridge; cmd_start ;;
+  status) cmd_status ;;
+  doctor) cmd_doctor ;;
+  threads) cmd_threads ;;
+  keymap) cmd_keymap ;;
+  spaces) shift; cmd_spaces "$@" ;;
+  logs) shift; cmd_logs "$@" ;;
+  layer) shift; cmd_layer "$@" ;;
+  uninstall) shift; cmd_uninstall "$@" ;;
+  version|--version|-v) version ;;
+  help|--help|-h) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

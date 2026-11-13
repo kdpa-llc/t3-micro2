@@ -1,0 +1,57 @@
+{
+  "name": "t3-micro2",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Work Louder Creator Micro 2 for T3 Code: six keys show the state of your threads and open them, the rest run T3 Code actions.",
+  "type": "module",
+  "license": "MIT",
+  "author": "KDPA",
+  "bin": {
+    "t3-micro2": "t3-micro2"
+  },
+  "files": [
+    "t3-micro2",
+    "Sources/",
+    "docs/keymap.html"
+  ],
+  "scripts": {
+    "lint": "shellcheck -S warning t3-micro2 tests/smoke.sh",
+    "test": "tests/smoke.sh",
+    "check:release-notes": "node scripts/check-release-notes.mjs",
+    "prepare": "husky || true"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "t3-code",
+    "work-louder",
+    "creator-micro",
+    "macropad",
+    "ai-agents",
+    "claude-code",
+    "codex",
+    "macos"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kdpa-llc/t3-micro2.git"
+  },
+  "homepage": "https://github.com/kdpa-llc/t3-micro2#readme",
+  "bugs": {
+    "url": "https://github.com/kdpa-llc/t3-micro2/issues"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^11.0.1",
+    "@semantic-release/github": "^12.0.2",
+    "@semantic-release/npm": "^13.1.2",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "husky": "^9.1.7",
+    "semantic-release": "^25.0.2"
+  }
+}

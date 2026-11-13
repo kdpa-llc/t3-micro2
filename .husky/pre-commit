@@ -1,0 +1,6 @@
+# Lint the shell scripts; CI runs the same check if shellcheck isn't installed here.
+if command -v shellcheck >/dev/null 2>&1; then
+  npm run lint
+else
+  echo "pre-commit: shellcheck isn't installed, so CI will lint the scripts"
+fi
