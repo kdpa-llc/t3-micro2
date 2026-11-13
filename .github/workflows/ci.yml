@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # Commit messages are checked across the whole pull request.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check shell scripts
+        run: npm run lint
+
+      - name: Check release notes
+        run: npm run check:release-notes
+
+      - name: Check commit messages
+        if: github.event_name == 'pull_request'
+        run: npx --no -- commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Check JSON and the key map page
+        run: |
+          python3 -m json.tool package.json > /dev/null
+          python3 -m json.tool .releaserc.json > /dev/null
+          python3 - <<'PY'
+          page = open("docs/keymap.html").read()
+          for label in ("NEXT", "APPROVE", "STOP", "NEW", "MIC", "SETTLE", "SEND"):
+              assert f"label: '{label}'" in page, f"docs/keymap.html has no {label} key"
+          print("key map page ok")
+          PY
+
+      - name: Check the npm package contents
+        run: |
+          npm pack --dry-run --json > "$RUNNER_TEMP/pack.json"
+          python3 - "$RUNNER_TEMP/pack.json" <<'PY'
+          import json, sys
+          files = {f["path"] for f in json.load(open(sys.argv[1]))[0]["files"]}
+          need = {"t3-micro2", "Sources/main.swift", "Sources/Bridge.swift", "Sources/Micro.swift", "Sources/T3.swift",
+                  "docs/keymap.html", "LICENSE", "README.md", "package.json"}
+          missing = need - files
+          assert not missing, f"missing from the package: {sorted(missing)}"
+          extra = {f for f in files if f.startswith((".github/", "tests/", "scripts/", "node_modules/"))}
+          assert not extra, f"should not be in the package: {sorted(extra)}"
+          print(f"{len(files)} files in the package")
+          PY
+
+  build:
+    # The app links AppKit and IOKit, so it builds on macOS only. macOS minutes
+    # count ten times in a private repository, so until this one is public the
+    # job runs only when someone starts the workflow by hand.
+    name: Build and self-test (macOS)
+    if: github.event_name == 'workflow_dispatch' || github.repository_visibility == 'public' || github.event.repository.visibility == 'public'
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Build into a temporary folder and run the self-test
+        run: tests/smoke.sh
+
+      # Install from the package like a user, then build the app from what was installed.
+      - name: Install from the package and build
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP"
+          npm install -g "$RUNNER_TEMP"/t3-micro2-*.tgz
+          t3-micro2 version
+          export T3_MICRO_APP="$RUNNER_TEMP/T3 Micro Bridge.app" T3_MICRO_SIGN=adhoc T3_MICRO_BUNDLE_ID=us.kdpa.t3-micro-bridge.ci
+          t3-micro2 build
+          "$T3_MICRO_APP/Contents/MacOS/t3-micro-bridge" --self-test

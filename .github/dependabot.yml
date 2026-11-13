@@ -1,0 +1,52 @@
+version: 2
+updates:
+  # Enable version updates for npm dependencies (the release tooling)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    # Group updates to reduce PR noise
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "automated"
+    open-pull-requests-limit: 5
+    ignore:
+      # Pinned to ^9 on purpose. Preset 10 requires
+      # conventional-changelog-writer@9+, but @semantic-release/release-notes-
+      # generator pins writer to ^8, and semantic-release resolves this preset
+      # by name at runtime - so a hoisted preset 10 makes generateNotes fail
+      # with "Missing helper", after npm publish has already succeeded.
+      # `npm run check:release-notes` catches it in CI. Revisit when
+      # release-notes-generator moves to writer 9.
+      - dependency-name: "conventional-changelog-conventionalcommits"
+        update-types: ["version-update:semver-major"]
+    # The package has no runtime dependencies, so dependency bumps never need
+    # a release: `chore` maps to no release in .releaserc.json.
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # Keep the GitHub Actions used by CI, CodeQL and releases up to date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

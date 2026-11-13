@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  # Release only what CI has tested: run after CI passes on main. The release
+  # commit is marked [skip ci], so it doesn't start another round.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Allows a release to be retried after fixing an external setting, such as
+  # an expired RELEASE_TOKEN, without creating an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Nothing is released while the repository is private. After that, only CI
+  # runs for pushes to this repository's main release, never a pull request
+  # (a fork's branch may also be called main).
+  check:
+    name: Check
+    if: >-
+      github.repository == 'kdpa-llc/t3-micro2' &&
+      github.event.repository.visibility == 'public' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
+    runs-on: ubuntu-latest
+
+    steps:
+      # This job runs the project's own scripts, so it gets no token at all.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check release notes
+        run: npm run check:release-notes
+
+  release:
+    name: Release
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      # Check the credential before checkout so an expired or missing token is
+      # reported directly instead of surfacing later as an ambiguous git error.
+      - name: Verify RELEASE_TOKEN
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error title=RELEASE_TOKEN missing::The RELEASE_TOKEN secret is not available to this repository. semantic-release pushes its release commit to protected branches, so the default GITHUB_TOKEN cannot be used. Add the PAT for the ruleset bypass identity and grant it access to this repository."
+            exit 1
+          fi
+
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $RELEASE_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user || echo "000")
+
+          if [ "$status" != "200" ]; then
+            echo "::error title=RELEASE_TOKEN rejected::GitHub returned HTTP $status for RELEASE_TOKEN. The PAT is expired, revoked, or invalid; replace the secret before retrying this workflow."
+            exit 1
+          fi
+
+          echo "RELEASE_TOKEN accepted by the GitHub API."
+
+      # Release the commit CI tested. If main has moved on since, semantic-release
+      # sees it's behind and skips; that newer commit's own CI run releases it.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+          persist-credentials: true
+
+      # npm trusted publishing (OIDC) needs npm >= 11.5.1 and Node >= 22.14.0;
+      # Node 24 ships a new enough npm. Until trusted publishing is set up on
+      # npmjs.com, semantic-release publishes with NPM_TOKEN.
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24.x"
+          cache: "npm"
+
+      - name: Verify npm supports trusted publishing
+        run: |
+          npm_version=$(npm --version)
+          echo "npm $npm_version, node $(node --version)"
+          required=11.5.1
+          if [ "$(printf '%s\n%s\n' "$required" "$npm_version" | sort -V | head -n1)" != "$required" ]; then
+            echo "::error::npm $npm_version is below $required, which trusted publishing (OIDC) requires."
+            exit 1
+          fi
+
+      # The release token is in .git/config from here on, so no package scripts
+      # run at install. The only code that runs with the tokens is semantic-release
+      # and its plugins.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
