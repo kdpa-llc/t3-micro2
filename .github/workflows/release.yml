@@ -17,9 +17,11 @@ permissions:
 jobs:
   # Nothing is released while the repository is private. After that, only CI
   # runs for pushes to this repository's main release, never a pull request
-  # (a fork's branch may also be called main).
-  check:
-    name: Check
+  # (a fork's branch may also be called main). The project's own checks ran in
+  # CI, without any token; this job runs nothing of the project but
+  # semantic-release.
+  release:
+    name: Release
     if: >-
       github.repository == 'kdpa-llc/t3-micro2' &&
       github.event.repository.visibility == 'public' &&
@@ -27,35 +29,6 @@ jobs:
        (github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.event == 'push' &&
         github.event.workflow_run.head_repository.full_name == github.repository))
-    runs-on: ubuntu-latest
-
-    steps:
-      # This job runs the project's own scripts, so it gets no token at all.
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-          persist-credentials: false
-
-      # No dependency cache in this workflow: it runs with the default branch's
-      # rights, and a cache it saved would be restored by later runs.
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: "24.x"
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Check release notes
-        run: npm run check:release-notes
-
-  release:
-    name: Release
-    needs: check
     runs-on: ubuntu-latest
     permissions:
       contents: write

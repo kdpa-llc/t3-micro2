@@ -34,7 +34,7 @@ The project uses [semantic-release](https://github.com/semantic-release/semantic
 
 The Release workflow starts after CI succeeds, so a version is published after the macOS job installed the package, built the app from it and ran the self-test. Starting the workflow by hand skips that wait, so do it only for a commit CI has already passed.
 
-The workflow has two jobs. `Check` runs the project's own scripts and gets no token. `Release` runs only semantic-release.
+The project's own scripts (lint, the release-notes check, the build) run in CI, which has no token. The Release job runs nothing of the project but semantic-release.
 
 The version is kept in `package.json` only. `t3-micro2 version` reads it, and the build writes it into the app.
 
