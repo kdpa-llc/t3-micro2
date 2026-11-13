@@ -9,14 +9,20 @@ Six keys light up with the state of your T3 Code threads and open them. The othe
 [![npm version][npm-version-badge]][npm-package]
 [![npm downloads][npm-downloads-badge]][npm-package]
 [![CI][ci-badge]][ci-workflow]
+[![CodeQL][codeql-badge]][codeql-workflow]
 [![License: MIT][license-badge]][license-file]
 [![Platform: macOS][platform-badge]](#-what-you-need)
 [![Swift 5][swift-badge]][swift]
 [![Works with T3 Code][t3-badge]][t3]
 
+[![GitHub Stars][stars-badge]][stargazers]
+[![GitHub Issues][issues-badge]][repo-issues]
+[![GitHub Last Commit][commit-badge]][commits]
+[![PRs Welcome][prs-badge]][contributing]
+
 [🚀 Quick start](#-quick-start) · [⌨️ Keys](#️-the-keys) · [🚦 Lights](#-the-lights) · [🧰 Commands](#-cli-reference) · [🛡️ Security](#️-security-and-privacy) · [💖 Support](#-support-the-project)
 
-<img src="docs/keymap.png" alt="The pad as a 3D model: six thread keys lit orange, red, green, blue and white, seven labeled action keys, and a card that explains the NEXT key" width="720">
+<img src="https://raw.githubusercontent.com/kdpa-llc/t3-micro2/main/docs/keymap.png" alt="The pad as a 3D model: six thread keys lit orange, red, green, blue and white, seven labeled action keys, and a card that explains the NEXT key" width="720">
 
 </div>
 
@@ -288,17 +294,19 @@ Serve the skills on your filesystem to any MCP client.
 
 Open source grows through the people who try it, share it, and improve it. If T3 Micro Bridge saves you a window switch:
 
+- ⭐ **[Star the repository][stargazers]** so more people with a pad on their desk can find it.
 - 🐛 **[Report a bug or suggest an idea][repo-issues]** to help shape what comes next.
 - 📝 **[Contribute code or documentation][contributing]**. First-time contributors are welcome.
 - 💖 **Sponsor continued development** using any of the options below.
 
 <div align="center">
 
+[![GitHub Stars][stars-badge]][stargazers]
 [![Sponsor on GitHub][sponsor-github-badge]][sponsor-github]
 [![Buy Me a Coffee][sponsor-coffee-badge]][sponsor-coffee]
 [![PayPal][sponsor-paypal-badge]][sponsor-paypal]
 
-**Every issue, pull request, and contribution helps. Thank you! 🙌**
+**Every star, issue, pull request, and contribution helps. Thank you! 🙌**
 
 </div>
 
@@ -329,6 +337,14 @@ Made with ❤️ by KDPA
 [npm-downloads-badge]: https://img.shields.io/npm/dm/t3-micro2
 [ci-badge]: https://github.com/kdpa-llc/t3-micro2/actions/workflows/ci.yml/badge.svg
 [ci-workflow]: https://github.com/kdpa-llc/t3-micro2/actions/workflows/ci.yml
+[codeql-badge]: https://github.com/kdpa-llc/t3-micro2/actions/workflows/codeql.yml/badge.svg
+[codeql-workflow]: https://github.com/kdpa-llc/t3-micro2/actions/workflows/codeql.yml
+[stars-badge]: https://img.shields.io/github/stars/kdpa-llc/t3-micro2?style=social
+[stargazers]: https://github.com/kdpa-llc/t3-micro2/stargazers
+[issues-badge]: https://img.shields.io/github/issues/kdpa-llc/t3-micro2
+[commit-badge]: https://img.shields.io/github/last-commit/kdpa-llc/t3-micro2
+[commits]: https://github.com/kdpa-llc/t3-micro2/commits/main
+[prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/License-MIT-yellow.svg
 [license-file]: LICENSE
 [platform-badge]: https://img.shields.io/badge/platform-macOS-lightgrey.svg
