@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0](https://github.com/kdpa-llc/t3-micro2/compare/v0.1.1...v1.0.0) (2026-11-15)
+
+### ⚠ BREAKING CHANGES
+
+* **keys:** the action keys moved. Row 3 is now NEW, SETTLE, APPROVE, STOP
+and row 4 is NEXT, MIC, SEND. To keep the places of 0.1.1, set "actionOrder" to
+["next", "approve", "stop", "new", "mic", "settle", "send"] in config.json. Run
+`t3-micro2 setup` after updating, so the keys of the pad's T3 layer get the
+names that light up.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+
+### Features
+
+* **keys:** light all 13 keys, each action key in its own color, and move the action keys ([7be28c1](https://github.com/kdpa-llc/t3-micro2/commit/7be28c18d9629d6e88f549223ef261b7e8fb9438)), closes [#606060](https://github.com/kdpa-llc/t3-micro2/issues/606060)
+
 ## [0.1.1](https://github.com/kdpa-llc/t3-micro2/compare/v0.1.0...v0.1.1) (2026-11-13)
 
 ### Documentation
