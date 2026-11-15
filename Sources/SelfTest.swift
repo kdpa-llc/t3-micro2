@@ -5,8 +5,11 @@ import Foundation
 enum SelfTest {
     /// A Creator Micro 2 keymap as the Input app wrote it: one typing layer, the ChatGPT layer, one empty layer.
     static let keymapBefore = #"{"version":1,"activeProfileId":0,"profiles":[{"id":0,"name":"Default","layers":[{"id":0,"name":"Layer 1","color":16711680,"layout":{"keymap":[["KC_A","KC_B"],["KC_C","KC_D","KC_E","KC_F"],["KC_G","KC_H","KC_I","KC_J"],["KC_K","KC_L","KC_M"]],"encoders":[["KC_VOLU","KC_VOLD","KC_MPLY"]],"joystick":{"type":"RADIAL","sectors":[{"k":"KI_X","a1":0.1875,"a2":0.3125},{"k":"KC_NONE","a1":0.3125,"a2":0.1875}]}},"lights":{"backlight":{"effect":"snake","brightness":1,"speed":0.5,"magic":1,"color":16777215},"underglow":{"effect":"rainbow","brightness":1,"speed":0.55,"magic":1,"color":16777215}}},{"id":3,"name":"ChatGPT","color":16711680,"layout":{"keymap":[["KV_OAI_AG00","KV_OAI_AG01"],["KV_OAI_AG02","KV_OAI_AG03","KV_OAI_AG04","KV_OAI_AG05"],["KV_OAI_ACT06","KV_OAI_ACT07","KV_OAI_ACT08","KV_OAI_ACT09"],["KV_OAI_ACT10","KV_OAI_ACT11","KV_OAI_ACT12"]],"encoders":[["KV_OAI_ENC_CC","KV_OAI_ENC_CW","KV_OAI_ENC_CLK"]],"joystick":{"type":"VENDOR","sectors":[]}}},{"id":1,"name":"Layer","color":16711680,"layout":{"keymap":[["KC_NONE","KC_NONE"],["KC_NONE","KC_NONE","KC_NONE","KC_NONE"],["KC_NONE","KC_NONE","KC_NONE","KC_NONE"],["KC_NONE","KC_NONE","KC_NONE"]],"encoders":[["KC_NONE","KC_NONE","KC_NONE"]],"joystick":{"type":"RADIAL","sectors":[{"k":"KI_X","a1":0.1875,"a2":0.3125},{"k":"KC_NONE","a1":0.3125,"a2":0.1875}]}},"lights":{"backlight":{"effect":"snake","brightness":1,"speed":0.5,"magic":1,"color":16777215},"underglow":{"effect":"rainbow","brightness":1,"speed":0.55,"magic":1,"color":16777215}}}],"macrosUsed":[],"multiActionsUsed":[]}],"multiActions":[],"macros":[],"macrosGroups":[],"multiActionsGroups":[],"linkedApps":[]}"#
-    /// The same file after setup turned the empty layer into the T3 layer. A pad ran with exactly these bytes.
-    static let keymapAfter = #"{"version":1,"activeProfileId":0,"profiles":[{"id":0,"name":"Default","layers":[{"id":0,"name":"Layer 1","color":16711680,"layout":{"keymap":[["KC_A","KC_B"],["KC_C","KC_D","KC_E","KC_F"],["KC_G","KC_H","KC_I","KC_J"],["KC_K","KC_L","KC_M"]],"encoders":[["KC_VOLU","KC_VOLD","KC_MPLY"]],"joystick":{"type":"RADIAL","sectors":[{"k":"KI_X","a1":0.1875,"a2":0.3125},{"k":"KC_NONE","a1":0.3125,"a2":0.1875}]}},"lights":{"backlight":{"effect":"snake","brightness":1,"speed":0.5,"magic":1,"color":16777215},"underglow":{"effect":"rainbow","brightness":1,"speed":0.55,"magic":1,"color":16777215}}},{"id":3,"name":"ChatGPT","color":16711680,"layout":{"keymap":[["KV_OAI_AG00","KV_OAI_AG01"],["KV_OAI_AG02","KV_OAI_AG03","KV_OAI_AG04","KV_OAI_AG05"],["KV_OAI_ACT06","KV_OAI_ACT07","KV_OAI_ACT08","KV_OAI_ACT09"],["KV_OAI_ACT10","KV_OAI_ACT11","KV_OAI_ACT12"]],"encoders":[["KV_OAI_ENC_CC","KV_OAI_ENC_CW","KV_OAI_ENC_CLK"]],"joystick":{"type":"VENDOR","sectors":[]}}},{"id":1,"name":"T3 Code","color":16711680,"layout":{"keymap":[["KV_OAI_AG00","KV_OAI_AG01"],["KV_OAI_AG02","KV_OAI_AG03","KV_OAI_AG04","KV_OAI_AG05"],["KV_OAI_ACT06","KV_OAI_ACT07","KV_OAI_ACT08","KV_OAI_ACT09"],["KV_OAI_ACT10","KV_OAI_ACT11","KV_OAI_ACT12"]],"encoders":[["KV_OAI_ENC_CC","KV_OAI_ENC_CW","KV_OAI_ENC_CLK"]],"joystick":{"type":"VENDOR","sectors":[]}}}],"macrosUsed":[],"multiActionsUsed":[]}],"multiActions":[],"macros":[],"macrosGroups":[],"multiActionsGroups":[],"linkedApps":[]}"#
+    /// The same file after setup turned the empty layer into the T3 layer. All 13 keys have AG names,
+    /// which is what makes the pad light them. A pad ran with a T3 layer of exactly this text.
+    static let keymapAfter = #"{"version":1,"activeProfileId":0,"profiles":[{"id":0,"name":"Default","layers":[{"id":0,"name":"Layer 1","color":16711680,"layout":{"keymap":[["KC_A","KC_B"],["KC_C","KC_D","KC_E","KC_F"],["KC_G","KC_H","KC_I","KC_J"],["KC_K","KC_L","KC_M"]],"encoders":[["KC_VOLU","KC_VOLD","KC_MPLY"]],"joystick":{"type":"RADIAL","sectors":[{"k":"KI_X","a1":0.1875,"a2":0.3125},{"k":"KC_NONE","a1":0.3125,"a2":0.1875}]}},"lights":{"backlight":{"effect":"snake","brightness":1,"speed":0.5,"magic":1,"color":16777215},"underglow":{"effect":"rainbow","brightness":1,"speed":0.55,"magic":1,"color":16777215}}},{"id":3,"name":"ChatGPT","color":16711680,"layout":{"keymap":[["KV_OAI_AG00","KV_OAI_AG01"],["KV_OAI_AG02","KV_OAI_AG03","KV_OAI_AG04","KV_OAI_AG05"],["KV_OAI_ACT06","KV_OAI_ACT07","KV_OAI_ACT08","KV_OAI_ACT09"],["KV_OAI_ACT10","KV_OAI_ACT11","KV_OAI_ACT12"]],"encoders":[["KV_OAI_ENC_CC","KV_OAI_ENC_CW","KV_OAI_ENC_CLK"]],"joystick":{"type":"VENDOR","sectors":[]}}},{"id":1,"name":"T3 Code","color":16711680,"layout":{"keymap":[["KV_OAI_AG00","KV_OAI_AG01"],["KV_OAI_AG02","KV_OAI_AG03","KV_OAI_AG04","KV_OAI_AG05"],["KV_OAI_AG06","KV_OAI_AG07","KV_OAI_AG08","KV_OAI_AG09"],["KV_OAI_AG10","KV_OAI_AG11","KV_OAI_AG12"]],"encoders":[["KV_OAI_ENC_CC","KV_OAI_ENC_CW","KV_OAI_ENC_CLK"]],"joystick":{"type":"VENDOR","sectors":[]}}}],"macrosUsed":[],"multiActionsUsed":[]}],"multiActions":[],"macros":[],"macrosGroups":[],"multiActionsGroups":[],"linkedApps":[]}"#
+    /// What versions up to 0.1.1 wrote: a plain copy of the ChatGPT layer, whose seven ACT keys stay dark.
+    static let keymapEarlier = #"{"version":1,"activeProfileId":0,"profiles":[{"id":0,"name":"Default","layers":[{"id":0,"name":"Layer 1","color":16711680,"layout":{"keymap":[["KC_A","KC_B"],["KC_C","KC_D","KC_E","KC_F"],["KC_G","KC_H","KC_I","KC_J"],["KC_K","KC_L","KC_M"]],"encoders":[["KC_VOLU","KC_VOLD","KC_MPLY"]],"joystick":{"type":"RADIAL","sectors":[{"k":"KI_X","a1":0.1875,"a2":0.3125},{"k":"KC_NONE","a1":0.3125,"a2":0.1875}]}},"lights":{"backlight":{"effect":"snake","brightness":1,"speed":0.5,"magic":1,"color":16777215},"underglow":{"effect":"rainbow","brightness":1,"speed":0.55,"magic":1,"color":16777215}}},{"id":3,"name":"ChatGPT","color":16711680,"layout":{"keymap":[["KV_OAI_AG00","KV_OAI_AG01"],["KV_OAI_AG02","KV_OAI_AG03","KV_OAI_AG04","KV_OAI_AG05"],["KV_OAI_ACT06","KV_OAI_ACT07","KV_OAI_ACT08","KV_OAI_ACT09"],["KV_OAI_ACT10","KV_OAI_ACT11","KV_OAI_ACT12"]],"encoders":[["KV_OAI_ENC_CC","KV_OAI_ENC_CW","KV_OAI_ENC_CLK"]],"joystick":{"type":"VENDOR","sectors":[]}}},{"id":1,"name":"T3 Code","color":16711680,"layout":{"keymap":[["KV_OAI_AG00","KV_OAI_AG01"],["KV_OAI_AG02","KV_OAI_AG03","KV_OAI_AG04","KV_OAI_AG05"],["KV_OAI_ACT06","KV_OAI_ACT07","KV_OAI_ACT08","KV_OAI_ACT09"],["KV_OAI_ACT10","KV_OAI_ACT11","KV_OAI_ACT12"]],"encoders":[["KV_OAI_ENC_CC","KV_OAI_ENC_CW","KV_OAI_ENC_CLK"]],"joystick":{"type":"VENDOR","sectors":[]}}}],"macrosUsed":[],"multiActionsUsed":[]}],"multiActions":[],"macros":[],"macrosGroups":[],"multiActionsGroups":[],"linkedApps":[]}"#
 
     private static var failures = 0
     private static var checks = 0
@@ -27,6 +30,7 @@ enum SelfTest {
         json()
         keymap()
         shortcuts()
+        colors()
         echoes()
         threads()
         check("version looks like 1.2.3", bridgeVersion.split(separator: ".").count == 3)
@@ -82,7 +86,35 @@ enum SelfTest {
         check("a broken file is reported", problem { try Keymap.plan(file: Data("{".utf8)) } != nil)
         check("a file without profiles is reported", problem { try Keymap.plan(file: Data("{}".utf8)) } == .unreadable("it has no profiles"))
 
+        let earlier = Data(keymapEarlier.utf8)
+        check("a T3 layer from an earlier version gets the names that light up",
+              (try? Keymap.plan(file: earlier)) == .change(number: 3, replacing: Keymap.layerName, file: after))
+        check("so does one asked for by number", (try? Keymap.plan(file: earlier, replace: 3)) == .change(number: 3, replacing: Keymap.layerName, file: after))
+        let alone = Data(keymapEarlier.replacingOccurrences(of: "\"name\":\"ChatGPT\"", with: "\"name\":\"T3 Code\"").utf8)
+        if case let .change(number, _, file)? = try? Keymap.plan(file: alone) {
+            check("without a ChatGPT layer it renames its own keys", number == 2 && !String(decoding: file, as: UTF8.self).contains("KV_OAI_ACT06\",\"KV_OAI_ACT07\",\"KV_OAI_ACT08\",\"KV_OAI_ACT09\"]],\"encoders\":[[\"KV_OAI_ENC_CC\",\"KV_OAI_ENC_CW\",\"KV_OAI_ENC_CLK\"]],\"joystick\":{\"type\":\"VENDOR\",\"sectors\":[]}}},{\"id\":1"))
+        } else {
+            check("without a ChatGPT layer it still gives a plan", false)
+        }
+        check("the ChatGPT layer keeps its ACT names", String(decoding: after, as: UTF8.self).contains("\"name\":\"ChatGPT\",\"color\":16711680,\"layout\":{\"keymap\":[[\"KV_OAI_AG00\",\"KV_OAI_AG01\"],[\"KV_OAI_AG02\",\"KV_OAI_AG03\",\"KV_OAI_AG04\",\"KV_OAI_AG05\"],[\"KV_OAI_ACT06\""))
+        check("the knob keeps its names", String(decoding: after, as: UTF8.self).components(separatedBy: "KV_OAI_ENC_CLK").count == 3)
+        check("action keys keep their names to the bridge",
+              ["AG06", "AG12", "ACT06", "AG00", "AG05", "ENC_CLK"].map(Keymap.keyName) == ["ACT06", "ACT12", "ACT06", "AG00", "AG05", "ENC_CLK"])
+        let usual = ActionKey.allCases
+        check("row 3 is new, settle, approve, stop and row 4 is next, mic, send",
+              usual.map { $0.rawValue } == ["new", "settle", "approve", "stop", "next", "mic", "send"])
+        check("each action key has its action", ["ACT06", "ACT07", "ACT08", "ACT09", "ACT10", "ACT11", "ACT12"].map { ActionKey.on($0, in: usual) }
+              == [.new, .settle, .approve, .stop, .next, .mic, .send])
+        check("the pad reports them under their lit names", ActionKey.on(Keymap.keyName("AG11"), in: usual) == .mic)
+        check("thread keys and the knob have no action", ["AG00", "AG05", "ACT05", "ACT13", "ENC_CLK", "ACT"].allSatisfy { ActionKey.on($0, in: usual) == nil })
+        let before011 = ["next", "approve", "stop", "new", "mic", "settle", "send"]
+        check("the order can be set", ActionKey.order(from: before011).map { ActionKey.on("ACT06", in: $0) } == .some(.next))
+        check("an order must name all seven, once each",
+              [["next"], before011 + ["send"], Array(before011.dropLast()) + ["mic"], Array(before011.dropLast()) + ["enter"], []].allSatisfy { ActionKey.order(from: $0) == nil })
+
         let layers = (try? Keymap.layers(in: before)) ?? []
+        check("only the new T3 layer can light every key",
+              ((try? Keymap.layers(in: after)) ?? []).map { $0.lit } == [true, false, true] && ((try? Keymap.layers(in: earlier)) ?? []).map { $0.lit } == [true, false, false])
         check("layers are described", layers.map { "\($0.number)\($0.vendor ? "v" : "")\($0.empty ? "e" : "")" } == ["1", "2v", "3e"])
     }
 
@@ -137,6 +169,67 @@ enum SelfTest {
         let own = Data(#"[{"key":"mod+.","command":"thread.stop"}]"#.utf8)
         check("an existing stop shortcut is kept", (try? Shortcuts.addingStop(to: own)) == .present("mod+."))
         check("a changed stop shortcut is not removed", (try? Shortcuts.removingStop(from: own)) == .some(nil))
+    }
+
+    // MARK: Colors
+
+    private static func colors() {
+        check("#FF6D00", Scheme.parse(color: "#FF6D00") == 0xFF6D00)
+        check("ff6d00 and 0xFF6D00", Scheme.parse(color: "ff6d00") == 0xFF6D00 && Scheme.parse(color: " 0xFF6D00 ") == 0xFF6D00)
+        check("off is black", Scheme.parse(color: "off") == 0 && Scheme.parse(color: "#000000") == 0)
+        check("not a color", ["", "#FFF", "orange", "#GG0000", "#FF6D0000"].allSatisfy { Scheme.parse(color: $0) == nil })
+
+        let written = Scheme.parse(Data(Scheme.defaultFile.utf8))
+        check("the file written for people holds the defaults", written.scheme == Scheme() && written.problems.isEmpty)
+        check("every state and key has a default", Scheme.threadNames.allSatisfy { Scheme().threads[$0.state] != nil }
+              && ActionKey.allCases.allSatisfy { Scheme().keys[$0] != nil })
+
+        let edited = Scheme.parse(Data(##"{"keys":{"mic":"#112233","stop":"off","send":7,"enter":"#FFFFFF"},"threads":{"idle":"off"},"modes":{"advanced":"00FF00"},"restBrightness":2,"ring":{}}"##.utf8))
+        var want = Scheme()
+        want.keys[.mic] = 0x112233; want.keys[.stop] = 0; want.threads[.idle] = 0; want.advanced = 0x00FF00
+        check("an edited file changes what it names and nothing else", edited.scheme == want)
+        check("each mistake is named", edited.problems.count == 4 && edited.problems.contains { $0.hasPrefix("keys.send ") }
+              && edited.problems.contains { $0.hasPrefix("keys.enter ") } && edited.problems.contains { $0.hasPrefix("restBrightness ") }
+              && edited.problems.contains { $0.hasPrefix("ring ") })
+        check("a broken file means the defaults", Scheme.parse(Data("{".utf8)).scheme == Scheme() && Scheme.parse(Data("[]".utf8)).problems.count == 1)
+        check("true is not a brightness", Scheme.parse(Data(#"{"restBrightness":true}"#.utf8)).scheme.rest == Scheme().rest)
+        check("0 is a brightness", Scheme.parse(Data(#"{"restBrightness":0}"#.utf8)).scheme.rest == 0)
+
+        let scheme = Scheme()
+        let threads = scheme.threadLights([.awaiting, .working, .off, nil, .idle, .error], brightness: 0.5)
+        check("thread keys are numbered 0 to 5", threads.map { $0.id } == [0, 1, 2, 3, 4, 5])
+        check("a waiting thread pulses in its color", threads[0] == KeyLight(id: 0, color: 0xFF6D00, brightness: 0.5, effect: KeyLight.breath, speed: 0.4))
+        check("a failed thread is steady", threads[5] == KeyLight(id: 5, color: 0xFF0033, brightness: 0.5, effect: KeyLight.solid, speed: 0))
+        check("a strong color is sent as it is", KeyLight.split(0xFF6D00) == (0xFF6D00, 1) && KeyLight.split(0x00FF4C) == (0x00FF4C, 1))
+        check("a dark color is a strong color at less light", KeyLight.split(0x606060) == (0xFFFFFF, 96.0 / 255) && KeyLight.split(0x803700).color == 0xFF6E00)
+        check("black is no light", KeyLight.split(0) == (0, 0) && KeyLight.lit(3, 0, 1) == .off(3))
+        check("grey is white with less light", KeyLight.lit(7, 0x606060, 0.5) == KeyLight(id: 7, color: 0xFFFFFF, brightness: 0.5 * 96 / 255, effect: KeyLight.solid, speed: 0))
+        check("a key without a thread is off", threads[2] == .off(2) && threads[3] == .off(3))
+        check("a state set to off is off", want.threadLights([.idle], brightness: 1) == [.off(0)])
+
+        func actions(_ scheme: Scheme = scheme, enabled: Bool = true, wantsYou: Bool = false, waiting: Bool = false, micDown: Bool = false) -> [KeyLight] {
+            scheme.actionLights(brightness: 0.5, enabled: enabled, wantsYou: wantsYou, waiting: waiting, micDown: micDown)
+        }
+        let rest = actions()
+        check("action keys are numbered 6 to 12 on the pad", rest.map { $0.id } == [6, 7, 8, 9, 10, 11, 12])
+        check("at rest every action key shows its color, softly",
+              rest.map { $0.color } == [0xFFFFFF, 0xFFFFFF, 0x00FF4C, 0xFF0033, 0xFF6D00, 0xFF00C8, 0x304FFF]
+              && [0, 2, 3, 4, 5].allSatisfy { rest[$0].brightness == 0.5 * 0.4 } && rest.allSatisfy { $0.effect == KeyLight.solid })
+        check("SETTLE is grey: white, at well under half the light of NEW", rest[1].brightness < rest[0].brightness * 0.5 && rest[1].brightness > 0)
+        check("no two action keys look the same as their neighbor", zip(rest, rest.dropFirst()).allSatisfy { $0.color != $1.color || $0.brightness != $1.brightness })
+        func bright(_ lights: [KeyLight]) -> [Int] { lights.filter { $0.brightness == 0.5 }.map { $0.id } }
+        check("NEXT turns bright when a thread wants you", bright(actions(wantsYou: true)) == [10])
+        check("APPROVE too when one waits on an answer", bright(actions(wantsYou: true, waiting: true)) == [8, 10])
+        check("MIC is bright while held", bright(actions(micDown: true)) == [11])
+        let moved = scheme.actionLights(ActionKey.order(from: ["next", "approve", "stop", "new", "mic", "settle", "send"]) ?? [],
+                                        brightness: 0.5, enabled: true, wantsYou: true, waiting: false, micDown: false)
+        check("a changed order moves the lights with the actions", moved.map { $0.id } == [6, 7, 8, 9, 10, 11, 12]
+              && moved[0].color == 0xFF6D00 && bright(moved) == [6] && moved[5].brightness == 0.5 * 0.4 * 96 / 255)
+        check("actionKeys off turns all seven off", actions(enabled: false) == (6...12).map { KeyLight.off($0) })
+        check("a key set to off stays off", actions(want)[3] == .off(9) && actions(want)[5].color == 0x55AAFF)
+        var dark = Scheme(); dark.rest = 0
+        check("rest brightness 0 leaves only called keys lit", actions(dark, wantsYou: true).filter { $0.effect != 0 }.map { $0.id } == [10])
+        check("the pad gets short names", (KeyLight.lit(6, 0xFF0000, 1).payload as NSDictionary) == (["id": 6, "c": 0xFF0000, "b": 1.0, "e": 1, "s": 0.0, "sk": 0, "sa": 0] as NSDictionary))
     }
 
     // MARK: Key echoes

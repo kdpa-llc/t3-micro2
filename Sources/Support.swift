@@ -13,6 +13,8 @@ let backupsDir = supportDir.appendingPathComponent("backups")
 let logDir = homeDir.appendingPathComponent("Library/Logs/T3MicroBridge")
 let configURL = supportDir.appendingPathComponent("config.json")
 let stateURL = supportDir.appendingPathComponent("state.json")
+/// The colors of every light. People edit it; the bridge reads it again when it changes.
+let colorsURL = supportDir.appendingPathComponent("colors.json")
 /// What the running bridge last saw. `t3-micro2 status` reads it.
 let statusURL = supportDir.appendingPathComponent("status.json")
 let logURL = logDir.appendingPathComponent("bridge.log")
@@ -86,6 +88,8 @@ struct Config {
     var slotOrder = "priority"
     /// How long a key must stay down to count as a hold, in advanced mode.
     var holdSeconds = 0.45
+    /// Which action is on which of the seven action keys: row 3 from the left, then row 4.
+    var actionOrder = ActionKey.allCases
 
     static func load() -> Config {
         var c = Config()
@@ -102,6 +106,13 @@ struct Config {
         if let v = obj["t3Homes"] as? [String], !v.isEmpty { c.t3Homes = v }
         if let v = obj["slotOrder"] as? String, ["priority", "sidebar"].contains(v) { c.slotOrder = v }
         if let v = obj["holdSeconds"] as? Double { c.holdSeconds = min(2, max(0.2, v)) }
+        if let v = obj["actionOrder"] {
+            if let order = (v as? [String]).flatMap(ActionKey.order) {
+                c.actionOrder = order
+            } else {
+                log("config.json: actionOrder must name each of \(ActionKey.allCases.map { $0.rawValue }.joined(separator: ", ")) once, so the keys keep their usual order")
+            }
+        }
         return c
     }
 
@@ -113,6 +124,7 @@ struct Config {
             "brightness": brightness, "keysBacklight": keysBacklight,
             "t3BundleId": t3BundleId, "actionKeys": actionKeys,
             "t3Homes": t3Homes, "slotOrder": slotOrder, "holdSeconds": holdSeconds,
+            "actionOrder": actionOrder.map { $0.rawValue },
         ]
         if let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted, .sortedKeys]) {
             try? data.write(to: configURL)

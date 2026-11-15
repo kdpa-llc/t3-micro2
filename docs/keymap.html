@@ -21,6 +21,8 @@
   --led-green: #00ff4c;
   --led-red: #ff0033;
   --led-white: #ffffff;
+  --led-magenta: #ff00c8;
+  --led-grey: #8a8f9a;
   --display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
   --body: Inter, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -88,6 +90,8 @@ body[data-mode="simple"] .row .hold { grid-column: 2; }
 .dot.off { box-shadow: none; background: transparent; border: 1px solid var(--line); }
 .chip b { display: block; font-weight: 600; }
 .chip span { color: var(--muted); font-size: 13.5px; }
+h3.sub { margin: 26px 0 12px; }
+.lede.after { margin: 14px 0 0; max-width: 78ch; }
 .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .note { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .note p, .note li { color: var(--muted); }
@@ -119,7 +123,7 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
   <header>
     <span class="eyebrow">Creator Micro 2 · T3 Code layer</span>
     <h1>T3 Micro Keymap</h1>
-    <p class="lede">The pad on its T3 Code layer, as T3 Micro Bridge runs it. Six keys show your threads, seven keys act on the open thread. Start in simple mode. Advanced adds a second action when you hold a key, and turns the joystick on.</p>
+    <p class="lede">The pad on its T3 Code layer, as T3 Micro Bridge runs it. Six keys show your threads, seven keys act on the open thread, and each of the seven has a color of its own. Start in simple mode. Advanced adds a second action when you hold a key, and turns the joystick on.</p>
     <div class="switches">
       <div class="switch">
         <span class="eyebrow">Mode</span>
@@ -163,6 +167,17 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
       <div class="chip"><i class="dot" style="color: var(--led-white)"></i><div><b>White</b><span>Idle. Nothing new.</span></div></div>
       <div class="chip"><i class="dot off"></i><div><b>Off</b><span>No thread on that key.</span></div></div>
     </div>
+    <h3 class="sub">The seven action keys</h3>
+    <div class="legend">
+      <div class="chip"><i class="dot" style="color: var(--led-white)"></i><div><b>NEW, white</b><span>A blank page. A new thread starts white, too.</span></div></div>
+      <div class="chip"><i class="dot" style="color: var(--led-grey)"></i><div><b>SETTLE, grey</b><span>White with the light turned low: the thread fades from the list.</span></div></div>
+      <div class="chip"><i class="dot" style="color: var(--led-green)"></i><div><b>APPROVE, green</b><span>Green for yes.</span></div></div>
+      <div class="chip"><i class="dot" style="color: var(--led-red)"></i><div><b>STOP, red</b><span>Red for stop.</span></div></div>
+      <div class="chip"><i class="dot" style="color: var(--led-orange)"></i><div><b>NEXT, orange</b><span>The color of a thread that waits on you. It takes you to it.</span></div></div>
+      <div class="chip"><i class="dot" style="color: var(--led-magenta)"></i><div><b>MIC, magenta</b><span>Your voice. The one color no thread uses.</span></div></div>
+      <div class="chip"><i class="dot" style="color: var(--led-blue)"></i><div><b>SEND, blue</b><span>The color of a working thread. Send, and the thread turns blue.</span></div></div>
+    </div>
+    <p class="lede after">The action keys glow softly. One turns bright when something calls for it: NEXT while a thread wants you, APPROVE while a thread waits on an answer, MIC while you hold it. Every color is in <code>~/Library/Application Support/T3MicroBridge/colors.json</code>. Change one, save, and the pad shows it a second later.</p>
     <div class="two">
       <div class="note">
         <h3>Which thread is on which key</h3>
@@ -196,15 +211,17 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
 
   <section id="usage">
     <h2>Why the keys are where they are</h2>
-    <p class="lede">The layout follows how people work with several agent threads at once.</p>
+    <p class="lede">The places follow the rules that human-factors standards give for control panels, and how people work with several agent threads at once.</p>
     <div class="facts">
-      <div class="fact"><div class="num">NEXT<small>the thread that waits on you</small></div><p>Agents stop to ask questions, and a question you miss holds its thread for as long as you miss it.</p><p class="so">One key opens the longest wait. The ring pulses orange for any waiting thread, not only the six on the keys.</p></div>
-      <div class="fact"><div class="num">APPROVE<small>and decline on a hold</small></div><p>With agents in auto or full access, approval requests are rare.</p><p class="so">Approve has one key. Decline is a hold on it, so a slip does not refuse a request.</p></div>
-      <div class="fact"><div class="num">SETTLE<small>clear a finished thread</small></div><p>Settling is the main way to keep the thread list short.</p><p class="so">SETTLE has its own key. In advanced mode, holding a thread key settles that thread.</p></div>
-      <div class="fact"><div class="num">STOP<small>end a run</small></div><p>A run that went the wrong way should stop at once.</p><p class="so">STOP has a key. T3 Code has no shortcut for it, so setup adds one.</p></div>
-      <div class="fact"><div class="num">ORDER<small>by urgency, not position</small></div><p>With several threads running, the top of the sidebar is often pinned and idle.</p><p class="so">Keys follow urgency, and threads you started rank ahead of scheduled ones.</p></div>
-      <div class="fact"><div class="num">MIC<small>talk, then SEND</small></div><p>A short prompt is faster to say than to type.</p><p class="so">Hold MIC and talk, let go, press SEND.</p></div>
+      <div class="fact"><div class="num">LIGHTS<small>above the keys you press</small></div><p>A hand on the controls should not cover the indicators, so indicators go above the controls.</p><p class="so">The six thread keys, which you mostly read, are the far rows. The seven action keys are the near rows.</p></div>
+      <div class="fact"><div class="num">THE LOOP<small>next, mic, send</small></div><p>Controls used one after the other belong together, in the order of use, left to right. The ones used most get the easiest reach.</p><p class="so">The row nearest your hand is NEXT, MIC, SEND: go to the thread, talk, send.</p></div>
+      <div class="fact"><div class="num">SEND<small>bottom right</small></div><p>Enter is at the right edge of a keyboard and the bottom right of a number pad.</p><p class="so">SEND is the bottom right key, right after MIC.</p></div>
+      <div class="fact"><div class="num">ROW 3<small>two pairs</small></div><p>Controls with a related function belong together.</p><p class="so">NEW and SETTLE start a thread and put one away. APPROVE and STOP let a run go on and end it. Nothing that ends a run or a thread sits in the near row.</p></div>
+      <div class="fact"><div class="num">APPROVE, STOP<small>accept left of cancel</small></div><p>In a dialog, accept sits left of cancel.</p><p class="so">APPROVE is left of STOP, green left of red. Decline is a hold on APPROVE, so a slip does not refuse a request.</p></div>
+      <div class="fact"><div class="num">STOP<small>at the right edge</small></div><p>A stop control must be quick to find.</p><p class="so">STOP is the last key of row 3, with one neighbor in its row. It acts on a tap, with no hold.</p></div>
+      <div class="fact"><div class="num">ORDER<small>by urgency, not position</small></div><p>With several threads running, the top of the sidebar is often pinned and idle.</p><p class="so">Thread keys follow urgency, and threads you started rank ahead of scheduled ones.</p></div>
     </div>
+    <p class="lede after">The rules are from chapter 6 of the FAA Human Factors Design Standard, which quotes MIL-STD-1472, and from Nielsen Norman Group's advice on consequential options. Prefer another order? Set <code>actionOrder</code> in <code>config.json</code>.</p>
   </section>
 </div>
 
@@ -212,11 +229,21 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
 <script>
 (function () {
   const LED = { off: 0x000000, idle: 0xffffff, done: 0x00ff4c, working: 0x304ffe, waiting: 0xff6d00, failed: 0xff0033 };
+  // The colors of colors.json, as the bridge ships them.
+  const KEY_LED = { next: 0xff6d00, approve: 0x00ff4c, stop: 0xff0033, new: 0xffffff, mic: 0xff00c8, settle: 0x606060, send: 0x304ffe };
+  const KEY_WORD = {
+    next: 'Orange, the color of a thread that waits on you. Bright while a thread wants you, soft otherwise.',
+    approve: 'Green for yes. Bright while a thread waits on an answer, soft otherwise.',
+    stop: 'Red for stop.', new: 'White, a blank page.',
+    mic: 'Magenta, the one color no thread uses. Bright while you hold it.',
+    settle: 'Grey, which is white with the light turned low.', send: 'Blue, the color of a working thread.'
+  };
+  const REST = 0.4;
   const STATE_WORD = { off: 'empty', idle: 'idle', done: 'finished', working: 'working', waiting: 'waiting on you', failed: 'failed' };
   const SCENES = {
-    calm: { keys: ['idle', 'idle', 'idle', 'off', 'off', 'off'], ring: ['off', 'off'] },
-    busy: { keys: ['done', 'working', 'working', 'working', 'idle', 'idle'], ring: ['working', 'snake'] },
-    needs: { keys: ['waiting', 'failed', 'done', 'working', 'working', 'idle'], ring: ['waiting', 'breath'] }
+    calm: { keys: ['idle', 'idle', 'idle', 'off', 'off', 'off'], ring: ['off', 'off'], called: [] },
+    busy: { keys: ['done', 'working', 'working', 'working', 'idle', 'idle'], ring: ['working', 'snake'], called: ['next'] },
+    needs: { keys: ['waiting', 'failed', 'done', 'working', 'working', 'idle'], ring: ['waiting', 'breath'], called: ['next', 'approve'] }
   };
   const thread = (n, row, col) => ({ id: 't' + n, kind: 'thread', n, row, col, label: String(n), name: 'Thread key ' + n, group: 'Thread keys',
     tap: 'Opens the thread on this key in T3 Code and brings T3 Code to the front.',
@@ -232,29 +259,29 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
       tap: 'Push left to go back, right to go forward, up for the effort picker, down to show or hide the sidebar. One action per push.',
       advancedOnly: true, sends: 'Left ⌘[. Right ⌘]. Up ⌘⇧E. Down ⌘B.' },
     thread(3, 1, 0), thread(4, 1, 1), thread(5, 1, 2), thread(6, 1, 3),
-    { id: 'next', kind: 'key', row: 2, col: 0, label: 'NEXT', name: 'Next', group: 'Action keys',
-      tap: 'Opens the thread that has waited on you longest. Press again for the one after it. With nothing waiting, it goes to failed and then finished threads. If there is nothing at all, the ring blinks green.',
-      sends: 'Opens a t3code:// link.', why: 'A question that sits unanswered stops a thread. One key takes you to the oldest one.' },
-    { id: 'approve', kind: 'key', row: 2, col: 1, label: 'APPROVE', name: 'Approve', group: 'Action keys',
-      tap: 'Approves the request shown in the open thread.', hold: 'Declines it.',
-      sends: 'Presses the Approve or Decline button in the T3 Code window.', why: 'Approvals are rare when agents run with broad permissions, so they share one key.' },
-    { id: 'stop', kind: 'key', row: 2, col: 2, label: 'STOP', name: 'Stop', group: 'Action keys',
-      tap: 'Stops the run in the open thread.', sends: '⌘⌥X, a shortcut setup adds to T3 Code, which has none for stop.' },
-    { id: 'new', kind: 'key', row: 2, col: 3, label: 'NEW', name: 'New thread', group: 'Action keys',
+    { id: 'new', kind: 'key', row: 2, col: 0, label: 'NEW', name: 'New thread', group: 'Action keys',
       tap: 'Starts a new thread. Works even when T3 Code is in the background.', hold: 'Starts one without a project.',
-      sends: 'Opens t3code://new. Hold ⌘⌥N.' },
+      sends: 'Opens t3code://new. Hold ⌘⌥N.', why: 'Row 3 is two pairs. NEW and SETTLE are the first: one starts a thread, the other puts one away.' },
+    { id: 'settle', kind: 'key', row: 2, col: 1, label: 'SETTLE', name: 'Settle', group: 'Action keys',
+      tap: 'Settles the open thread. It leaves the list and its key, and the next thread moves up.', hold: 'Pins or unpins the open thread.',
+      sends: '⌘⇧S. Hold ⌘⇧P.', why: 'It sits beside NEW: one starts a thread, the other puts one away. Settling is how a finished thread leaves the list.' },
+    { id: 'approve', kind: 'key', row: 2, col: 2, label: 'APPROVE', name: 'Approve', group: 'Action keys',
+      tap: 'Approves the request shown in the open thread.', hold: 'Declines it.',
+      sends: 'Presses the Approve or Decline button in the T3 Code window.', why: 'APPROVE and STOP are the second pair of row 3. Accept sits left of cancel, as in a dialog.' },
+    { id: 'stop', kind: 'key', row: 2, col: 3, label: 'STOP', name: 'Stop', group: 'Action keys',
+      tap: 'Stops the run in the open thread.', sends: '⌘⌥X, a shortcut setup adds to T3 Code, which has none for stop.', why: 'It sits right of APPROVE, as cancel sits right of accept, at the right edge of the row, where it is quick to find. It acts on a tap.' },
     { id: 'setup', kind: 'setup', row: 3, col: 0, label: '', name: 'Small round button', group: 'Knob and joystick',
       tap: 'Switches the pad to its next layer. The bridge only acts on the T3 Code layer. On any other layer it lets go of the pad, so Codex keeps its own layer.',
       sends: 'Nothing.' },
-    { id: 'mic', kind: 'key', row: 3, col: 1, label: 'MIC', name: 'Dictate', group: 'Action keys',
+    { id: 'next', kind: 'key', row: 3, col: 1, label: 'NEXT', name: 'Next', group: 'Action keys',
+      tap: 'Opens the thread that has waited on you longest. Press again for the one after it. With nothing waiting, it goes to failed and then finished threads. If there is nothing at all, the ring blinks green.',
+      sends: 'Opens a t3code:// link.', why: 'The near row is the loop, left to right: go to the thread, talk, send. NEXT starts it.' },
+    { id: 'mic', kind: 'key', row: 3, col: 2, label: 'MIC', name: 'Dictate', group: 'Action keys',
       tap: 'Hold and talk, let go to finish. A short press starts dictation and the next short press ends it. Same in both modes.',
-      sends: '⌘⇧D, held for as long as you hold the key.', why: 'A short prompt is faster to say than to type.' },
-    { id: 'settle', kind: 'key', row: 3, col: 2, label: 'SETTLE', name: 'Settle', group: 'Action keys',
-      tap: 'Settles the open thread. It leaves the list and its key, and the next thread moves up.', hold: 'Pins or unpins the open thread.',
-      sends: '⌘⇧S. Hold ⌘⇧P.', why: 'Settling is how a finished thread leaves the list.' },
+      sends: '⌘⇧D, held for as long as you hold the key.', why: 'It sits in the middle of the near row, right before SEND, the key you press after it.' },
     { id: 'send', kind: 'key', row: 3, col: 3, label: 'SEND', name: 'Send', group: 'Action keys',
       tap: 'Sends what is in the composer.', hold: 'Sends the other way: steers a running thread right now, or sends a new draft to the background.',
-      sends: 'Return. Hold ⌘Return.' }
+      sends: 'Return. Hold ⌘Return.', why: 'Bottom right, where Enter sits on a keyboard and on a number pad.' }
   ];
   const byId = Object.fromEntries(CONTROLS.map(c => [c.id, c]));
   const state = { mode: 'simple', scene: 'needs', selected: 'next' };
@@ -273,6 +300,7 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
     if (c.hold && adv) html += '<dt class="hold">Hold</dt><dd>' + esc(c.hold) + '</dd>';
     if (c.holdAlways) html += '<dt class="hold">Hold</dt><dd>' + esc(c.holdAlways) + '</dd>';
     if (c.kind === 'thread') html += '<dt>Light</dt><dd>In this example: ' + esc(STATE_WORD[threadState(c)]) + '.</dd>';
+    if (c.kind === 'key') html += '<dt>Light</dt><dd>' + esc(KEY_WORD[c.id]) + '</dd>';
     html += '</dl>';
     if (c.hold && !adv) html += '<p class="why">Advanced mode adds a hold action to this key.</p>';
     if (c.why) html += '<p class="why">' + esc(c.why) + '</p>';
@@ -373,9 +401,10 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
       } else {
         let size = 62; g.font = '700 ' + size + 'px ' + FONT;
         while (g.measureText(c.label).width > 226 && size > 26) { size -= 2; g.font = '700 ' + size + 'px ' + FONT; }
+        g.lineJoin = 'round'; g.lineWidth = 9; g.strokeStyle = 'rgba(8,9,13,0.75)'; g.strokeText(c.label, 128, adv && c.hold ? 104 : 130);
         g.fillStyle = 'rgba(255,255,255,0.96)'; g.fillText(c.label, 128, adv && c.hold ? 104 : 130);
         if (adv && c.hold) { const word = { approve: 'decline', new: 'no project', settle: 'pin', send: 'other way' }[c.id];
-          g.fillStyle = '#b9a3ff'; g.font = '700 30px ' + FONT; g.fillText('hold: ' + word, 128, 186); }
+          g.font = '700 30px ' + FONT; g.lineWidth = 8; g.strokeText('hold: ' + word, 128, 186); g.fillStyle = '#e6dcff'; g.fillText('hold: ' + word, 128, 186); }
       }
       const tex = new T.CanvasTexture(cv); tex.encoding = T.sRGBEncoding; tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); return tex;
     }
@@ -441,7 +470,10 @@ ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column;
           const st = sc.keys[c.n - 1]; let k = st === 'off' ? 0 : 1;
           if (st === 'waiting' && !still) k = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 3.2));
           tmp.setHex(LED[st]); p.mat.emissive.copy(tmp); p.mat.emissiveIntensity = 0.92 * k; p.glow.material.color.copy(tmp); p.glow.material.opacity = 0.85 * k;
-        } else if (c.kind === 'key') { p.mat.emissive.setHex(sel ? 0x9d7dff : 0x000000); p.mat.emissiveIntensity = sel ? 0.35 : 0; }
+        } else if (c.kind === 'key') {
+          const k = sc.called.indexOf(c.id) >= 0 ? 1 : REST;
+          tmp.setHex(KEY_LED[c.id]); p.mat.emissive.copy(tmp); p.mat.emissiveIntensity = 0.92 * k; p.glow.material.color.copy(tmp); p.glow.material.opacity = 0.85 * k;
+        }
         if (p.spin) { const a = sel && !still ? Math.sin(t * 2.2) * 0.9 : 0; p.spin.forEach(m => { m.rotation.y = a; }); if (p.spin[2]) p.spin[2].position.set(-Math.sin(a) * 3.6, 12.45, -Math.cos(a) * 3.6); }
         if (p.tilt) { const on = sel && state.mode === 'advanced' && !still; p.tilt.rotation.z = on ? Math.sin(t * 2.4) * 0.3 : 0; p.tilt.rotation.x = on ? Math.cos(t * 1.2) * 0.2 : 0; }
       }

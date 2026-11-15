@@ -6,20 +6,9 @@ import IOKit.hid
 
 // MARK: - T3 Code client
 
+/// What a thread is doing. `Scheme` gives each state its color.
 enum ThreadState: String {
     case off, idle, unread, working, awaiting, error
-
-    /// Same colors the Codex app uses for its thread states.
-    var color: Int {
-        switch self {
-        case .off: return 0
-        case .idle: return 0xFFFFFF
-        case .unread: return 0x00FF4C
-        case .working: return 0x304FFE
-        case .awaiting: return 0xFF6D00
-        case .error: return 0xFF0033
-        }
-    }
 }
 
 struct Slot: Equatable {

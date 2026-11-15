@@ -68,11 +68,9 @@ enum SetupTool {
                 let active = result["layer_index"] as? Int
                 keymap(micro) { file in
                     printLayers(file, active: active)
-                    if case let .present(number)? = try? Keymap.plan(file: file) {
-                        print("t3 layer: \(number)")
-                    } else {
-                        print("t3 layer: none")
-                    }
+                    let t3 = (try? Keymap.layers(in: file))?.first { $0.name == Keymap.layerName && $0.vendor }
+                    print("t3 layer: \(t3.map { String($0.number) } ?? "none")")
+                    if let t3, !t3.lit { print("t3 layer keys: only six can light up") }
                     finish(.ok)
                 }
             }
@@ -98,8 +96,12 @@ enum SetupTool {
                         remember(layer: number)
                         finish(.ok, "t3 layer: \(number)\nlayer: already on the pad, nothing to change")
                     case let .change(number, replacing, newFile):
+                        // A T3 layer from an earlier version names seven keys in a way the pad never lights.
+                        let renames = replacing == Keymap.layerName
                         if dryRun {
-                            finish(.ok, "t3 layer: \(number)\nlayer: would turn layer \(number) (\(replacing)) into \(Keymap.layerName)")
+                            finish(.ok, "t3 layer: \(number)\nlayer: would " + (renames
+                                ? "rename the keys of layer \(number) (\(replacing)) so all 13 can light up"
+                                : "turn layer \(number) (\(replacing)) into \(Keymap.layerName)"))
                         }
                         guard let backup = backUp(file, as: "keymap") else {
                             finish(.failed, "layer: could not save a backup in \(backupsDir.path), so nothing was changed")
@@ -110,7 +112,9 @@ enum SetupTool {
                                 finish(.writeFailed, "layer: the pad did not confirm the new keymap. Put the backup back with: t3-micro2 layer restore")
                             }
                             remember(layer: number)
-                            finish(.ok, "t3 layer: \(number)\nlayer: layer \(number) (\(replacing)) is now \(Keymap.layerName)\nchanged: yes")
+                            finish(.ok, "t3 layer: \(number)\nlayer: " + (renames
+                                ? "layer \(number) (\(replacing)) has new key names, so all 13 keys can light up"
+                                : "layer \(number) (\(replacing)) is now \(Keymap.layerName)") + "\nchanged: yes")
                         }
                     }
                 }
