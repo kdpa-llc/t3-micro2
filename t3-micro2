@@ -402,7 +402,8 @@ cmd_doctor() {
         case $out in
           *"t3 layer: none"*) bad "the pad has no T3 layer: run 't3-micro2 setup'" ;;
           *) ok "pad connected, $(printf '%s\n' "$out" | sed -n 's/^t3 layer: /T3 layer /p')" ;;
-        esac ;;
+        esac
+        case $out in *"t3 layer keys: only six"*) bad "the pad's T3 layer is from an earlier version, so only six keys light up: run 't3-micro2 setup'" ;; esac ;;
       3) bad "pad not found: plug it in with its cable" ;;
       *) bad "the pad does not answer: $(printf '%s\n' "$out" | tail -n 1)" ;;
     esac

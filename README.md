@@ -4,7 +4,7 @@
 
 ### Your T3 Code threads on a Work Louder Creator Micro 2.
 
-Six keys light up with the state of your T3 Code threads and open them. The other keys, the knob and the joystick jump to the thread that waits on you, stop a run, take dictation, settle a thread and send. It does for T3 Code what the pad's ChatGPT layer does for Codex, on a layer of its own.
+Six keys light up with the state of your T3 Code threads and open them. The other seven keys each glow in a color of their own, and with the knob and the joystick they jump to the thread that waits on you, stop a run, take dictation, settle a thread and send. It does for T3 Code what the pad's ChatGPT layer does for Codex, on a layer of its own.
 
 [![npm version][npm-version-badge]][npm-package]
 [![npm downloads][npm-downloads-badge]][npm-package]
@@ -22,13 +22,14 @@ Six keys light up with the state of your T3 Code threads and open them. The othe
 
 [🚀 Quick start](#-quick-start) · [⌨️ Keys](#️-the-keys) · [🚦 Lights](#-the-lights) · [🧰 Commands](#-cli-reference) · [🛡️ Security](#️-security-and-privacy) · [💖 Support](#-support-the-project)
 
-<img src="https://raw.githubusercontent.com/kdpa-llc/t3-micro2/main/docs/keymap.png" alt="The pad as a 3D model: six thread keys lit orange, red, green, blue and white, seven labeled action keys, and a card that explains the NEXT key" width="720">
+<img src="https://raw.githubusercontent.com/kdpa-llc/t3-micro2/main/docs/keymap.png" alt="The pad as a 3D model: six thread keys lit orange, red, green, blue and white, seven action keys each lit in its own color, and a card that explains the NEXT key" width="720">
 
 </div>
 
 With several agent threads running, the slow part is noticing which one needs you. The pad shows it without a window switch: a key pulses orange when a thread waits on your answer, and one press opens it. The bridge only takes the pad while it is on the T3 Code layer, so Codex keeps working on its own layer.
 
 - 🚦 **Thread lights**: orange for waiting on you, red for failed, green for finished, blue for working, white for idle. The ring around the pad shows the most urgent state of every open thread.
+- 🎨 **A color for every key**: green approves, red stops, orange takes you to the thread that waits. You can find a key without reading its label, and change any color in one file.
 - 🎯 **The six keys follow urgency**: what waits on you comes first, longest wait first. Or they follow the T3 Code sidebar, if you prefer its order.
 - ⏭️ **NEXT**: one key opens the thread that has waited on you longest, then the one after it.
 - ⌨️ **One press per action**: approve, stop the run, new thread, dictate, settle, send. The knob steps through threads and picks a model.
@@ -83,7 +84,7 @@ To try the latest `main` before it's released, clone the repository and run `./t
 `t3-micro2 setup` is safe to run again. It:
 
 - builds **T3 Micro Bridge.app** into `~/Applications` and signs it with an identity made for this Mac;
-- gives the pad a **T3 Code layer**, a copy of its ChatGPT layer, after saving the pad's keymap as a backup;
+- gives the pad a **T3 Code layer**, a copy of its ChatGPT layer with key names that let all 13 keys light up, after saving the pad's keymap as a backup;
 - adds a shortcut for **stopping a run** to T3 Code (⌘⌥X), which has none;
 - starts the bridge, and starts it again at every login.
 
@@ -101,17 +102,17 @@ Press the pad's small round button until the keys light up for your threads. `t3
 
 ## ⌨️ The keys
 
-The pad has four rows. Row 1 is the knob, thread keys 1 and 2, and the joystick. Row 2 is thread keys 3 to 6.
+The pad has four rows. Row 1 is the knob, thread keys 1 and 2, and the joystick. Row 2 is thread keys 3 to 6. Row 3 holds four actions you decide on. Row 4, nearest your hand, is the round button and the three keys you press all day, in the order you press them: NEXT, MIC, SEND.
 
 | Control                      | Tap                                                                 | Hold (advanced mode)                       |
 | ---------------------------- | ------------------------------------------------------------------- | ------------------------------------------ |
 | **Thread keys 1 to 6**       | Open that thread                                                    | Open it, then settle it                    |
-| **NEXT** (row 3, first)      | Open the thread that has waited on you longest; again for the next  |                                            |
-| **APPROVE** (row 3, second)  | Approve the request in the open thread                              | Decline it                                 |
-| **STOP** (row 3, third)      | Stop the run                                                        |                                            |
-| **NEW** (row 3, fourth)      | New thread                                                          | New thread without a project               |
-| **MIC** (row 4, second)      | Hold and talk, let go to finish. A short press starts or ends dictation | Same                                   |
-| **SETTLE** (row 4, third)    | Settle the open thread                                              | Pin or unpin it                            |
+| **NEW** (row 3, first)       | New thread                                                          | New thread without a project               |
+| **SETTLE** (row 3, second)   | Settle the open thread                                              | Pin or unpin it                            |
+| **APPROVE** (row 3, third)   | Approve the request in the open thread                              | Decline it                                 |
+| **STOP** (row 3, fourth)     | Stop the run                                                        |                                            |
+| **NEXT** (row 4, second)     | Open the thread that has waited on you longest; again for the next  |                                            |
+| **MIC** (row 4, third)       | Hold and talk, let go to finish. A short press starts or ends dictation | Same                                   |
 | **SEND** (row 4, fourth)     | Return                                                              | ⌘Return                                    |
 | **Knob**                     | Turn: previous or next thread. Press: model picker, turn to move, press to choose | Hold for a second, in either mode: switch between simple and advanced |
 | **Joystick**                 | Off in simple mode                                                  | Left back, right forward, up effort picker, down sidebar |
@@ -120,6 +121,26 @@ The pad has four rows. Row 1 is the knob, thread keys 1 and 2, and the joystick.
 - **Simple mode** acts the moment a key goes down. **Advanced mode** waits for the release, to tell a tap from a hold.
 - **Switch modes** by holding the knob for a second. The ring shows white for simple and violet for advanced. The mode is kept across restarts.
 - The small round button, first in row 4, is the pad's own. It switches layers.
+
+### Why the keys sit where they do
+
+The places follow the rules that human-factors standards give for control panels.
+
+- **Lights above, actions below.** A hand on the controls should not cover the indicators. The thread keys, which you mostly read, are the two far rows.
+- **The near row is the loop.** Controls used one after the other belong together, in the order of use, left to right, and the ones used most get the easiest reach. So row 4 is NEXT, MIC, SEND: go to the thread, talk, send.
+- **SEND is bottom right**, where Enter sits on a keyboard and on a number pad.
+- **Row 3 is two pairs.** Controls with a related function belong together. NEW and SETTLE start a thread and put one away. APPROVE and STOP let a run go on and end it.
+- **APPROVE is left of STOP**, as accept is left of cancel in a dialog.
+- **STOP is at the right edge of row 3**, where it is quick to find. It acts on a tap.
+- **Nothing that ends a run or a thread sits in the near row.**
+
+The rules are from [chapter 6 of the FAA Human Factors Design Standard][faa-hfds], which quotes MIL-STD-1472, and from Nielsen Norman Group's [advice on consequential options][nng-consequential]. Versions up to 0.1.1 had NEXT, APPROVE, STOP, NEW in row 3 and MIC, SETTLE, SEND in row 4. To get that order back, or any other, set `actionOrder` in the [settings](#-cli-reference):
+
+```json
+"actionOrder": ["next", "approve", "stop", "new", "mic", "settle", "send"]
+```
+
+The list names the seven action keys from the first key of row 3 to the last key of row 4. The lights move with the actions.
 
 ## 🚦 The lights
 
@@ -134,12 +155,67 @@ The pad has four rows. Row 1 is the knob, thread keys 1 and 2, and the joystick.
 
 These are the colors the ChatGPT app uses for Codex threads.
 
+**The seven action keys** each have one color, so you can find a key by color alone. The colors mean the same as on the thread keys.
+
+| Key         | Color      | Why                                                              |
+| ----------- | ---------- | ---------------------------------------------------------------- |
+| **NEW**     | ⚪ White   | A blank page. A new thread starts white, too.                    |
+| **SETTLE**  | 🔘 Grey    | White with the light turned low: the thread fades from the list. |
+| **APPROVE** | 🟢 Green   | Green for yes.                                                   |
+| **STOP**    | 🔴 Red     | Red for stop.                                                    |
+| **NEXT**    | 🟠 Orange  | The color of a thread that waits on you. NEXT takes you to it.   |
+| **MIC**     | 🟣 Magenta | Your voice. It is the one color no thread uses.                  |
+| **SEND**    | 🔵 Blue    | The color of a working thread. Send, and the thread turns blue.  |
+
+The action keys glow softly. One turns bright when something calls for it: NEXT while a thread wants you, APPROVE while a thread waits on an answer, and MIC while you hold it.
+
 **The ring around the pad** looks at every open thread, not only the six on the keys. It pulses orange when something waits on you, moves in blue while work runs, and stays red or green for a failure or a finished thread. A short green blink after NEXT means nothing is waiting.
 
 **Which thread is on which key.** Settled, snoozed and child threads never take a key. `slotOrder` in the settings picks the order of the rest:
 
 - `priority`, the default: threads that wait on you (longest wait first), failed, finished, running threads you started, running scheduled threads, then idle threads with pinned ones ahead.
 - `sidebar`: the T3 Code sidebar read top to bottom, so Pinned, then the main list, then the Working shelf.
+
+### Change the colors
+
+Every color is in `~/Library/Application Support/T3MicroBridge/colors.json`. The bridge writes the file the first time it starts:
+
+```json
+{
+  "threads": {
+    "waiting": "#FF6D00",
+    "failed": "#FF0033",
+    "finished": "#00FF4C",
+    "working": "#304FFE",
+    "idle": "#FFFFFF"
+  },
+  "keys": {
+    "new": "#FFFFFF",
+    "settle": "#606060",
+    "approve": "#00FF4C",
+    "stop": "#FF0033",
+    "next": "#FF6D00",
+    "mic": "#FF00C8",
+    "send": "#304FFE"
+  },
+  "modes": {
+    "simple": "#FFFFFF",
+    "advanced": "#8A5CFF"
+  },
+  "restBrightness": 0.4
+}
+```
+
+Open it in a text editor, change a value and save. The pad shows the change about a second later, with no restart.
+
+- **A color** is six hex digits, such as `"#FF6D00"`. `"off"` turns that light off.
+- **`threads`** colors the six thread keys and the ring, by thread state.
+- **`keys`** colors the seven action keys.
+- **`modes`** is the color the ring shows for a moment when you switch between simple and advanced.
+- **`restBrightness`**, from 0 to 1, is how bright an action key is while nothing calls for it. `1` keeps all seven at full brightness. `0` keeps them dark until one is called for.
+- **A mistake** costs nothing: a value the bridge can't read keeps its default, and `t3-micro2 logs` names it. Delete the file to get every default back.
+
+An LED has no grey or brown. A dark color is its strong color with less light: `"#606060"` is white at 38% of the light, and that is how SETTLE gets its grey. A pale color, such as pastel pink, comes out close to white.
 
 ## 🏗️ How it works
 
@@ -153,6 +229,7 @@ These are the colors the ChatGPT app uses for Codex threads.
 
 - **The pad** talks JSON over a USB interface of its own. Keys on a ChatGPT-type layer don't type. They report to the computer, and the computer sets their colors.
 - **The T3 layer** is a second layer of that type. The Input app can't make one, so setup writes it into the pad's `keymap.json`, the same way the Input app saves a keymap.
+- **Lights on all 13 keys.** The pad lights a key by itself only when the keymap gives it a thread name (`KV_OAI_AG00` and up). The ChatGPT layer names six keys that way and gives the other seven action names, so they stay dark. The T3 layer gives all 13 a thread name. The bridge still treats keys 7 to 13 as action keys.
 - **Taking turns with Codex.** Off the T3 layer, the bridge only asks the pad which layer is active, every second or two. On the T3 layer it opens the pad for itself, so the ChatGPT app doesn't also act on the same key presses. It lets go when you leave the layer, and while the Input app is in front so you can still edit the pad. Codex reconnects by itself a few seconds later.
 - **Thread states** come from each T3 server's local endpoint, with a read-only token the bridge gets from that server's own `t3` command. It asks every 2.5 seconds while the pad is on the T3 layer, and not at all otherwise.
 - **Actions.** Opening a thread and NEW use `t3code://` links. Everything else presses a T3 Code shortcut or, for APPROVE, the button in the window.
@@ -167,6 +244,7 @@ These are the colors the ChatGPT app uses for Codex threads.
 | `Sources/Actions.swift`      | Key presses and button presses in the T3 Code window                     |
 | `Sources/Shortcuts.swift`    | Reads T3 Code's shortcuts; adds the one for stop                         |
 | `Sources/Keymap.swift`       | Works out the T3 layer from the pad's keymap                             |
+| `Sources/Colors.swift`       | The colors file, and what each key shows                                 |
 | `Sources/SetupTool.swift`    | Adds and restores the layer, with backups                                |
 | `Sources/OrderedJSON.swift`  | JSON that writes back exactly what it read                               |
 | `Sources/SelfTest.swift`     | Checks that need neither a pad nor T3 Code                               |
@@ -194,7 +272,7 @@ These are the colors the ChatGPT app uses for Codex threads.
 | `t3-micro2 build`                                        | Rebuild the app from this folder                                            |
 | `t3-micro2 uninstall [--all]`                            | Remove the app; `--all` also removes settings, tokens and the signing identity |
 
-Settings are in `~/Library/Application Support/T3MicroBridge/config.json`. Run `t3-micro2 restart` after you change one.
+Settings are in `~/Library/Application Support/T3MicroBridge/config.json`. Run `t3-micro2 restart` after you change one. Colors have a file of their own: see [Change the colors](#change-the-colors).
 
 | Setting             | Default        | Meaning                                                                    |
 | ------------------- | -------------- | -------------------------------------------------------------------------- |
@@ -204,7 +282,8 @@ Settings are in `~/Library/Application Support/T3MicroBridge/config.json`. Run `
 | `brightness`        | `1`            | 0 to 1, for the keys and the ring                                          |
 | `keysBacklight`     | `false`        | `true` adds a dim white light under the keys                               |
 | `holdSeconds`       | `0.45`         | How long a press must last to count as a hold in advanced mode             |
-| `actionKeys`        | `true`         | `false` turns off the seven action keys and the joystick                   |
+| `actionKeys`        | `true`         | `false` turns off the seven action keys, their lights and the joystick     |
+| `actionOrder`       | see [the keys](#why-the-keys-sit-where-they-do) | Which action is on which action key, from row 3 left to row 4 right |
 | `t3PollSeconds`     | `2.5`          | How often thread states are read while the pad is on the T3 layer          |
 
 ## 🛡️ Security and privacy
@@ -229,6 +308,7 @@ t3-micro2 status
 t3-micro2 logs
 ```
 
+- **Only the six thread keys light up:** the pad has the T3 layer of an earlier version. Run `t3-micro2 setup`. It renames the layer's keys so all 13 can light up, and keeps a backup.
 - **The keys stay dark:** the pad is on another layer. Press its small round button until `t3-micro2 status` says it is on the T3 layer.
 - **A thread key opens a thread, but the other keys do nothing:** Accessibility is off. Turn on T3 Micro Bridge in System Settings > Privacy & Security > Accessibility.
 - **Setup says every layer has keys on it:** run `t3-micro2 layer show`, pick a layer you can give up, and run `t3-micro2 setup --layer N`. Its old keys are in the backup.
@@ -242,7 +322,7 @@ t3-micro2 logs
 
 ## 🔄 Update and remove
 
-**Update:** install the new version, then run setup again. Your settings, the pad's layer and the Accessibility permission stay.
+**Update:** install the new version, then run setup again. Your settings, your colors, the pad's layer and the Accessibility permission stay.
 
 ```bash
 npm install -g t3-micro2
@@ -354,6 +434,8 @@ Made with ❤️ by KDPA
 [t3]: https://github.com/pingdotgg/t3code
 [work-louder]: https://worklouder.cc/
 [threejs]: https://threejs.org/
+[faa-hfds]: https://hf.tc.faa.gov/hfds/download-hfds/hfds_pdfs/Ch6_Controls_and_visual_indicators.pdf
+[nng-consequential]: https://www.nngroup.com/articles/proximity-consequential-options/
 [repo-issues]: https://github.com/kdpa-llc/t3-micro2/issues
 [contributing]: CONTRIBUTING.md
 [security]: SECURITY.md

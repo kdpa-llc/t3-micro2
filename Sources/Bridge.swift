@@ -40,7 +40,12 @@ final class Bridge {
     var haveT3Data = false
     var statusFailures = 0
     var lastThreadsKey = ""
+    var lastActionsKey = ""
     var lastConfigKey = ""
+    var scheme = Scheme()
+    private var colorsStamp: Date?
+    private var lastColorsCheck = Date.distantPast
+    private var micDown = false
     var lastAssert = Date.distantPast
     var lastT3Poll = Date.distantPast
     var t3Fetching = false
@@ -78,16 +83,42 @@ final class Bridge {
 
     func start() {
         loadState()
+        scheme = Scheme.load()
+        colorsStamp = Bridge.stamp(of: colorsURL)
         micro.onNotify = { [weak self] method, params in self?.handleNotify(method, params) }
         micro.onClosed = { [weak self] in
             self?.layer = nil
-            self?.lastThreadsKey = ""
-            self?.lastConfigKey = ""
+            self?.micDown = false
+            self?.forgetLights()
         }
         Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in self?.tick() }
         // macOS shows its Accessibility question once per app. Ask at the first start, not at the first key press.
         if config.actionKeys, !AXIsProcessTrusted() { _ = actions.canSendKeys }
         log("bridge \(bridgeVersion) started: T3 layer \(config.t3LayerIndex), \(advanced ? "advanced" : "simple") mode, \(config.slotOrder) order, sources \(t3.sources.map { $0.name }.joined(separator: " + "))")
+    }
+
+    private static func stamp(of url: URL) -> Date? {
+        (try? fm.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
+    }
+
+    /// Makes the next `applyLighting` send everything again.
+    private func forgetLights() {
+        lastThreadsKey = ""
+        lastActionsKey = ""
+        lastConfigKey = ""
+    }
+
+    /// Reads colors.json again when it was saved, so an edit shows on the pad a second later.
+    private func watchColors(_ now: Date) {
+        guard now.timeIntervalSince(lastColorsCheck) >= 1 else { return }
+        lastColorsCheck = now
+        let stamp = Bridge.stamp(of: colorsURL)
+        guard stamp != colorsStamp else { return }
+        scheme = Scheme.load()
+        // Loading writes the file when it was deleted, which changes its date once more.
+        colorsStamp = Bridge.stamp(of: colorsURL)
+        log("colors: read \(colorsURL.lastPathComponent) again")
+        applyLighting()
     }
 
     /// Presses the shortcut T3 Code has for a command.
@@ -136,6 +167,7 @@ final class Bridge {
         let now = Date()
         noteAccessibility(now)
         writeStatus(now)
+        watchColors(now)
         let interval = onT3Layer ? config.activePollSeconds : config.idlePollSeconds
         if now.timeIntervalSince(lastTick) >= interval {
             lastTick = now
@@ -180,13 +212,13 @@ final class Bridge {
         if wantExclusive {
             guard micro.open(exclusive: true) else { return }
             log("T3 layer active: holding the device, Codex and Input are paused")
-            lastThreadsKey = ""
-            lastConfigKey = ""
+            forgetLights()
             applyLighting()
             pollT3()
         } else {
             // Releasing lets Codex reconnect and repaint its own colors.
             guard micro.open(exclusive: false) else { return }
+            micDown = false
             log(inputInFront ? "Input app is in front: device released" : "left the T3 layer: device released")
         }
     }
@@ -223,26 +255,28 @@ final class Bridge {
     private func applyLighting() {
         guard onT3Layer else { return }
         let b = config.brightness
-        let threads: [[String: Any]] = slots.enumerated().map { index, slot in
-            guard let slot, slot.state != .off else {
-                return ["id": index, "c": 0, "b": 0, "e": 0, "s": 0, "sk": 0, "sa": 0]
-            }
-            let pulsing = slot.state == .awaiting
-            return ["id": index, "c": slot.state.color, "b": b, "e": pulsing ? 4 : 1, "s": pulsing ? 0.4 : 0, "sk": 0, "sa": 0]
-        }
-        // The ring looks at every thread, not only the six on the keys.
         let states = Set(all.map { $0.state })
-        var ambient: [String: Any] = ["e": 0, "b": 0, "s": 0, "m": 0, "c": 0]
+        let threads = scheme.threadLights(slots.map { $0?.state }, brightness: b).map { $0.payload }
+        let actions = scheme.actionLights(config.actionOrder, brightness: b, enabled: config.actionKeys,
+                                          wantsYou: !T3Client.attention(all).isEmpty,
+                                          waiting: states.contains(.awaiting), micDown: micDown).map { $0.payload }
+        // The ring looks at every thread, not only the six on the keys.
+        func ring(_ effect: Int, _ color: Int) -> [String: Any] {
+            let (hue, level) = KeyLight.split(color)
+            guard level > 0 else { return ["e": 0, "b": 0, "s": 0, "m": 0, "c": 0] }
+            return ["e": effect, "b": b * level, "s": effect == 1 ? 0 : 0.4, "m": 0, "c": hue]
+        }
+        var ambient = ring(0, 0)
         if Date() < flashUntil {
-            ambient = ["e": 1, "b": b, "s": 0, "m": 0, "c": flashColor]
+            ambient = ring(1, flashColor)
         } else if states.contains(.awaiting) {
-            ambient = ["e": 4, "b": b, "s": 0.4, "m": 0, "c": ThreadState.awaiting.color]
+            ambient = ring(4, scheme.color(.awaiting))
         } else if states.contains(.working) {
-            ambient = ["e": 2, "b": b, "s": 0.4, "m": 0, "c": ThreadState.working.color]
+            ambient = ring(2, scheme.color(.working))
         } else if states.contains(.error) {
-            ambient = ["e": 1, "b": b, "s": 0, "m": 0, "c": ThreadState.error.color]
+            ambient = ring(1, scheme.color(.error))
         } else if states.contains(.unread) {
-            ambient = ["e": 1, "b": b, "s": 0, "m": 0, "c": ThreadState.unread.color]
+            ambient = ring(1, scheme.color(.unread))
         }
         let keys: [String: Any] = config.keysBacklight
             ? ["e": 1, "b": b * 0.4, "s": 0, "m": 0, "c": 0xFFFFFF]
@@ -254,7 +288,7 @@ final class Bridge {
         }
         let force = Date().timeIntervalSince(lastAssert) > 15
         if force { lastAssert = Date() }
-        let configKey = key(rgb), threadsKey = key(threads)
+        let configKey = key(rgb), threadsKey = key(threads), actionsKey = key(actions)
         if force || configKey != lastConfigKey {
             lastConfigKey = configKey
             micro.call("v.oai.rgbcfg", rgb) { response in
@@ -265,6 +299,14 @@ final class Bridge {
             lastThreadsKey = threadsKey
             micro.call("v.oai.thstatus", threads) { response in
                 if response?["result"] == nil { log("thread colors were not accepted") }
+            }
+        }
+        // The action keys take colors through the same call, as keys 6 to 12. They get a call of
+        // their own, because they change far less often than the thread keys.
+        if force || actionsKey != lastActionsKey {
+            lastActionsKey = actionsKey
+            micro.call("v.oai.thstatus", actions) { response in
+                if response?["result"] == nil { log("action key colors were not accepted") }
             }
         }
     }
@@ -286,7 +328,9 @@ final class Bridge {
         case "v.oai.hid":
             guard let key = p["k"] as? String else { return }
             let act = (p["act"] as? Int) ?? -1
-            log("key \(key) act=\(act)")
+            // The action goes in the log next to the key, since `actionOrder` can move it.
+            let action = ActionKey.on(Keymap.keyName(key), in: config.actionOrder).map { " \($0.rawValue)" } ?? ""
+            log("key \(key)\(action) act=\(act)")
             handleKey(key, act)
         case "v.oai.rad":
             guard let angle = p["a"] as? Double, let distance = p["d"] as? Double else { return }
@@ -297,7 +341,8 @@ final class Bridge {
     }
 
     /// act: 1 = press, 0 = release, 2 = one knob step.
-    func handleKey(_ key: String, _ act: Int) {
+    func handleKey(_ reported: String, _ act: Int) {
+        let key = Keymap.keyName(reported)
         if key == "ENC_CW" || key == "ENC_CC" {
             if act == 2 { knobTurn(clockwise: key == "ENC_CW") }
             return
@@ -306,12 +351,16 @@ final class Bridge {
             debug("ignored an echo of \(key)")
             return
         }
-        if key == "ACT10" {
+        let action = ActionKey.on(key, in: config.actionOrder)
+        if action == .mic {
             // Dictation: T3 Code treats a long press as hold-to-talk and a short one as start/stop.
             guard config.actionKeys else { return }
             guard let mic = shortcuts.key("composer.dictation") else { return }
             if act == 1 { actions.hold("mic", mic.code, mic.flags, down: true) }
             if act == 0 { actions.hold("mic", mic.code, mic.flags, down: false) }
+            // The key is bright for as long as it is held.
+            micDown = act == 1
+            applyLighting()
             return
         }
         // Keys with a hold action wait for the release to tell a tap from a hold.
@@ -353,18 +402,18 @@ final class Bridge {
             if hold { toggleMode() } else { knobClick() }
             return
         }
-        guard config.actionKeys else { return }
-        switch (key, hold) {
-        case ("ACT06", false): openNext()
-        case ("ACT07", false): actions.pressButton(labels: ["Approve"])
-        case ("ACT07", true): actions.pressButton(labels: ["Decline"])
-        case ("ACT08", false): run("thread.stop")
-        case ("ACT09", false): actions.open("t3code://new")
-        case ("ACT09", true): run("chat.newWithoutProject")
-        case ("ACT11", false): run("thread.settle")
-        case ("ACT11", true): run("thread.pin")
-        case ("ACT12", false): actions.tap(36)                               // Return: send
-        case ("ACT12", true): actions.tap(36, [.maskCommand])                // Command+Return
+        guard config.actionKeys, let action = ActionKey.on(key, in: config.actionOrder) else { return }
+        switch (action, hold) {
+        case (.next, false): openNext()
+        case (.approve, false): actions.pressButton(labels: ["Approve"])
+        case (.approve, true): actions.pressButton(labels: ["Decline"])
+        case (.stop, false): run("thread.stop")
+        case (.new, false): actions.open("t3code://new")
+        case (.new, true): run("chat.newWithoutProject")
+        case (.settle, false): run("thread.settle")
+        case (.settle, true): run("thread.pin")
+        case (.send, false): actions.tap(36)                                 // Return: send
+        case (.send, true): actions.tap(36, [.maskCommand])                  // Command+Return
         default: break
         }
     }
@@ -374,7 +423,7 @@ final class Bridge {
         let queue = T3Client.attention(all)
         guard !queue.isEmpty else {
             log("next: nothing is waiting on you")
-            flash(ThreadState.unread.color, seconds: 0.8)
+            flash(scheme.color(.unread), seconds: 0.8)
             return
         }
         let queueKey = queue.map { $0.id }.joined(separator: ",")
@@ -415,7 +464,7 @@ final class Bridge {
         for timer in pressTimers.values { timer.invalidate() }
         pressTimers.removeAll()
         log("mode: \(advanced ? "advanced" : "simple")")
-        flash(advanced ? 0x8A5CFF : 0xFFFFFF)
+        flash(advanced ? scheme.advanced : scheme.simple)
     }
 
     /// Advanced mode only. Angle: 0 right, 0.25 down, 0.5 left, 0.75 up. One action per push.

@@ -180,6 +180,7 @@ t3-micro2/
 │   ├── Actions.swift          # Key presses and button presses in T3 Code
 │   ├── Shortcuts.swift        # T3 Code's shortcuts, and the one for stop
 │   ├── Keymap.swift           # Works out the T3 layer from the pad's keymap
+│   ├── Colors.swift           # The colors file, and what each key shows
 │   ├── SetupTool.swift        # Adds and restores the layer, with backups
 │   ├── OrderedJSON.swift      # JSON that writes back exactly what it read
 │   ├── Support.swift          # Paths, log, settings
@@ -203,7 +204,7 @@ npm run lint
 npm test
 ```
 
-The smoke test touches nothing outside its temporary folder. The self-test covers the JSON reader and writer, the keymap change (against the exact file a pad ran with), the shortcut reader, thread states and both key orders.
+The smoke test touches nothing outside its temporary folder. The self-test covers the JSON reader and writer, the keymap change (against the exact file a pad ran with), the shortcut reader, the colors file and what each key shows, thread states and both key orders.
 
 ### What CI Covers
 
